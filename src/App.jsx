@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
+import { BrowserRouter, Routes, Route } from "react-router";
+import Body from './components/Body';
+
 
 function App() {
   const [count, setCount] = useState(0)
@@ -8,7 +11,13 @@ function App() {
   return (
     //implementing router here
     <>
-      <p className='text-center text-3xl '>hi vedant</p>
+      <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Body/>}>
+        </Route>
+      </Routes>
+
+      </BrowserRouter>
     </>
   )
 }

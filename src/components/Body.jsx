@@ -1,9 +1,18 @@
-import React from 'react'
+import React from "react";
+import Footer from "./Footer";
+import HomePage from "./HomePage";
+import Navbar from "./Navbar";
 
 const Body = () => {
   return (
-    <div>Body</div>
-  )
-}
+    <>
+      <div className="flex m-0 p-0 flex-col h-screen">
+        <Navbar />
+        <HomePage/>
+        <Footer />
+      </div>
+    </>
+  );
+};
 
-export default Body
+export default Body;
