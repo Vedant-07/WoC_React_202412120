@@ -1,0 +1,13 @@
+.split .gutter {
+  background-color: #a9a9a9;
+}
+
+.split .gutter.gutter-horizontal {
+  cursor: col-resize;
+  width: 10px;
+}
+
+.split .gutter.gutter-vertical {
+  cursor: row-resize;
+  height: 10px;
+}

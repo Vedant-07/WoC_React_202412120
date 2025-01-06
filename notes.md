@@ -1,9 +1,10 @@
 - Tasks
-- create a home page ,/
-- create navbar
-- create routing basic ,install react-router dom
+- reafctoring
+- compilaion knwledge
 
 remaining
+- creating /signup
+- firebase setup , through 2 ways authentication - email,pwd - gmail
 error page for routing
 routing - /guest ,/ide(for authenticated users) ,/signUp
 create editor implementation

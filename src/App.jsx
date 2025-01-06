@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import { BrowserRouter, Routes, Route } from "react-router";
 import Body from './components/Body';
+import HomePage from './components/HomePage';
+import Ide from './components/Ide';
 
 
 function App() {
@@ -14,6 +14,8 @@ function App() {
       <BrowserRouter>
       <Routes>
         <Route path='/' element={<Body/>}>
+        <Route index element={<HomePage />} />
+          <Route path='guest' element={<Ide/>}></Route>
         </Route>
       </Routes>
 
