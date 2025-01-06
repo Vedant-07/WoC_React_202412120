@@ -1,6 +1,6 @@
 - Tasks
-- reafctoring
-- compilaion knwledge
+- type code in code section
+- select the api to compile the code
 
 remaining
 - creating /signup
