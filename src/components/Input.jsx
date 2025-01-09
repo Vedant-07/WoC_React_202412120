@@ -56,7 +56,7 @@ const Input = () => {
       <textarea
         name=""
         id=""
-        className="flex-grow bg-gray-400 p-2"
+        className="flex-grow bg-black p-2 text-white"
         value={fileContent}
         onChange={(e) => setFileContent(e.target.value)}
       ></textarea>
