@@ -11,7 +11,8 @@ export const postSubmissionOptions = (
   apiUrl,
   apiKey,
   sourceCode,
-  languageId
+  languageId,
+  stdIn
 ) => ({
   method: "POST",
   url: `https://${apiUrl}/submissions`,
@@ -26,7 +27,7 @@ export const postSubmissionOptions = (
   data: {
     source_code: sourceCode,
     language_id: languageId,
-    stdin: "",
+    stdin: stdIn,
     expected_output: "",
   },
 });

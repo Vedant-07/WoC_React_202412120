@@ -22,10 +22,11 @@ const Ide = () => {
   const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
   const [selectedLanguageId, setSelectedLanguageId] = useState("");
   const [sourceCode, setSourceCode] = useState("");
+  const [stdIn, setStdIn] = useState("");
   const [output, setOutput] = useState(null);
   //three themes for now
   const [theme, setTheme] = useState("vs-dark");
-  const [] = useState();
+  const [loading, setLoading] = useState(false);
 
   const languages = useSelector((state) => state.languages);
   const [monacoLanguage, setMonacoLanguage] = useState("plaintext");
@@ -42,7 +43,7 @@ const Ide = () => {
         );
         dispatch(addLanguages(languages));
       };
-      fetchLanguages();
+      // fetchLanguages();
     }
   }, []);
 
@@ -55,13 +56,21 @@ const Ide = () => {
   };
 
   const handleSubmission = async () => {
+    setLoading(true);
     let token = null;
 
+    //TODO move below this two functions to utils
     // post submission and getting token
     const postSubmission = async () => {
       try {
         const res = await axios.request(
-          postSubmissionOptions(apiUrl, apiKey, sourceCode, selectedLanguageId)
+          postSubmissionOptions(
+            apiUrl,
+            apiKey,
+            sourceCode,
+            selectedLanguageId,
+            stdIn
+          )
         );
         token = res.data.token;
         console.log("Token is:", token);
@@ -70,8 +79,7 @@ const Ide = () => {
       }
     };
 
-    // Post submission and wait for the token
-    await postSubmission();
+    //await postSubmission();
 
     // Proceed only if the token is available
     if (!token) {
@@ -79,20 +87,50 @@ const Ide = () => {
       return;
     }
 
-    // get the submission result using token
-    const getSubmission = async () => {
+    const getSubmissionResult = async (token) => {
       try {
-        const res = await axios.request(
-          getSubmissionOptions(apiUrl, apiKey, token)
-        );
-        setOutput(res.data);
-        console.log("Final output is:", res.data);
+        let attempt = 0;
+        const maxAttempts = 7;
+        const delay = 1000;
+
+        while (attempt < maxAttempts) {
+          console.log(" token inside subm result is : " + token);
+          const res = await axios.request(
+            getSubmissionOptions(apiUrl, apiKey, token)
+          );
+          const status = res.data.status?.description;
+
+          if (
+            status === "In Queue" ||
+            status == "Accepted" ||
+            status == "Wrong Answer"
+          ) {
+            setOutput(res.data);
+            console.log("Final output is:", res.data);
+            return;
+          } else if (status === "Processing") {
+            console.log("Still processing, retrying...");
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          } else {
+            console.error("Unexpected status:", status);
+            return;
+          }
+
+          attempt++;
+        }
+
+        console.error("Exceeded maximum attempts. Processing took too long.");
       } catch (error) {
         console.error("Error fetching submission result:", error);
       }
     };
+    // await getSubmissionResult(token);
 
-    await getSubmission();
+    setLoading(false);
+  };
+
+  const handleStdIn = (val) => {
+    setStdIn(val);
   };
 
   return (
@@ -126,15 +164,15 @@ const Ide = () => {
                   </option>
                 ))}
             </select>
-            {selectedLanguageId}
-            {monacoLanguage}
           </div>
         </div>
         <button
-          className="bg-green-500 rounded-lg p-1"
+          className={`rounded-lg p-1 ${
+            loading ? "bg-gray-500 cursor-not-allowed" : "bg-green-500"
+          }`}
           onClick={handleSubmission}
         >
-          Run code
+          {loading ? "Processing the code plz wait ......" : "Run code"}
         </button>
         <div>
           <select
@@ -152,7 +190,6 @@ const Ide = () => {
       {hideInputAndOutput ? (
         <div className="flex-grow ">
           <Editor
-            //defaultLanguage="plaintext"
             language={monacoLanguage}
             defaultValue={""}
             value={sourceCode}
@@ -178,7 +215,6 @@ const Ide = () => {
         >
           <div className="flex-grow">
             <Editor
-              //defaultLanguage="plaintext"
               defaultValue=""
               language={monacoLanguage}
               theme={theme}
@@ -203,7 +239,7 @@ const Ide = () => {
               className="flex h-full"
             >
               <div className="flex-grow">
-                <Input />
+                <Input handleStdIn={handleStdIn} />
               </div>
               <div className="flex-grow">
                 <Output output={output} />

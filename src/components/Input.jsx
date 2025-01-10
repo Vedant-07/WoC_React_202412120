@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-const Input = () => {
+const Input = ({ handleStdIn }) => {
   const fileInputRef = useRef(null);
   const [fileName, setFileName] = useState("");
   const [fileContent, setFileContent] = useState("");
@@ -32,6 +32,10 @@ const Input = () => {
       reader.readAsText(file);
     }
   };
+
+  useEffect(() => {
+    handleStdIn(fileContent);
+  }, [fileContent, handleStdIn]);
 
   return (
     <div className="flex flex-grow h-full flex-col">

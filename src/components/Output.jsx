@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 
 const Output = ({ output }) => {
-  console.log("from Output");
-  console.log(!output);
-
   return (
     <div className="flex flex-grow h-full flex-col">
       <div className="flex justify-between items-center p-3">
