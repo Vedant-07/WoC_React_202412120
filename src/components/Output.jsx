@@ -7,6 +7,14 @@ const Output = ({ output }) => {
         <h4 className="text-2xl font-bold">Output</h4>
       </div>
 
+      {output?.stdout && (
+        <textarea
+          className="flex-grow bg-black text-green-600"
+          value={output.stdout}
+          disabled
+        ></textarea>
+      )}
+
       {/* Display Error (stderr) */}
       {output?.stderr && (
         <textarea
@@ -16,20 +24,23 @@ const Output = ({ output }) => {
         ></textarea>
       )}
 
-      {/* Display Output (stdout) */}
-      {output?.stdout && (
+      {/* If No Output */}
+      {output && !output?.stderr && !output?.stdout && (
         <textarea
-          className="flex-grow bg-black text-green-600"
-          value={output.stdout}
+          className="flex-grow bg-black text-yellow-600"
+          value={
+            output?.status +
+            "  \n " +
+            (output?.compileOutput === null ? "" : output?.compileOutput)
+          }
           disabled
         ></textarea>
       )}
 
-      {/* If No Output */}
       {!output && (
         <textarea
-          className="flex-grow bg-black"
-          value="Output would be displayed here ....."
+          className="flex-grow bg-black text-white"
+          value={" Output would be displayed here "}
           disabled
         ></textarea>
       )}

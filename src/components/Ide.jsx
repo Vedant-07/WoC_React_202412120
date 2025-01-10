@@ -41,7 +41,11 @@ const Ide = () => {
 
   useEffect(() => {
     //fetching languages
-    if (languages.length === 0) {
+    if(localStorage.getItem("languages")){
+     const langData=JSON.parse(localStorage.getItem("languages"))
+      dispatch(addLanguages(langData));
+    }
+    else if (languages.length === 0) {
       const fetchLanguages = async () => {
         const res = await axios.request(getLanguagesOptions(apiUrl, apiKey));
         const languages = findCommonLanguages(
@@ -49,8 +53,9 @@ const Ide = () => {
           res.data
         );
         dispatch(addLanguages(languages));
+        localStorage.setItem("languages",JSON.stringify(languages))
       };
-      // fetchLanguages();
+       fetchLanguages();
     }
   }, []);
 
@@ -71,6 +76,10 @@ const Ide = () => {
   };
 
   const handleSubmission = async () => {
+    if(!selectedLanguageId) {
+      alert("please select language first !!!!") 
+      return
+    }
     setLoading(true);
     let token = null;
 
@@ -94,7 +103,7 @@ const Ide = () => {
       }
     };
 
-    //await postSubmission();
+    await postSubmission();
 
     // Proceed only if the token is available
     if (!token) {
@@ -105,11 +114,10 @@ const Ide = () => {
     const getSubmissionResult = async (token) => {
       try {
         let attempt = 0;
-        const maxAttempts = 7;
-        const delay = 1000;
+        const maxAttempts = 3;
+        const delay = 2000;
 
         while (attempt < maxAttempts) {
-          console.log(" token inside subm result is : " + token);
           const res = await axios.request(
             getSubmissionOptions(apiUrl, apiKey, token)
           );
@@ -128,6 +136,12 @@ const Ide = () => {
             await new Promise((resolve) => setTimeout(resolve, delay));
           } else {
             console.error("Unexpected status:", status);
+            setOutput({
+              stderr:null,
+              stdout:null,
+              status,
+              compileOutput:res.data?.compile_output
+            })
             return;
           }
 
@@ -139,7 +153,7 @@ const Ide = () => {
         console.error("Error fetching submission result:", error);
       }
     };
-    // await getSubmissionResult(token);
+     await getSubmissionResult(token);
 
     setLoading(false);
   };
