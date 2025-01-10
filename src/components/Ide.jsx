@@ -14,6 +14,7 @@ import {
 } from "../constants/getApiOptions";
 import * as monaco from "monaco-editor";
 import { findCommonLanguages } from "../utils/findCommonLanguages";
+import { defaultLanguages } from "../constants/defaultLanguages";
 
 const apiKey = import.meta.env.VITE_API_KEY;
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -73,6 +74,7 @@ const Ide = () => {
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
     if (mLanguage) setMonacoLanguage(mLanguage.id);
+    setSourceCode(defaultLanguages(mLanguage.id))
   };
 
   const handleSubmission = async () => {

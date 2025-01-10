@@ -1,11 +1,10 @@
 #### this is made just for my reference related to the tasks i do
 - Tasks
-- default code for every language
-- commit - 
+-
 
 remaining
 - check the error for TLE(problem in reference app too)
-- error for when the limit is reached
+- download the code feature
 - use react toast-ify for output
 - customize the Output | for now its simple
 - make the options in editor of monaco/react customizable
