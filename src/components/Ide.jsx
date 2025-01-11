@@ -24,16 +24,15 @@ const Ide = () => {
   const [selectedLanguageId, setSelectedLanguageId] = useState("");
   //const [sourceCode, setSourceCode] = useState("");
   const [sourceCode, setSourceCode] = useState(() => {
-    return JSON.parse(localStorage.getItem('sourceCode')) || "";
+    return JSON.parse(localStorage.getItem("sourceCode")) || "";
   });
   const [stdIn, setStdIn] = useState("");
   const [output, setOutput] = useState(null);
   //three themes for now
   //const [theme, setTheme] = useState("vs-dark");
-  const [theme,setTheme]=useState(()=>{
-    return JSON.parse(localStorage.getItem('theme')) || 'vs-dark'
-  }
-  )
+  const [theme, setTheme] = useState(() => {
+    return JSON.parse(localStorage.getItem("theme")) || "vs-dark";
+  });
   const [loading, setLoading] = useState(false);
 
   const languages = useSelector((state) => state.languages);
@@ -42,11 +41,10 @@ const Ide = () => {
 
   useEffect(() => {
     //fetching languages
-    if(localStorage.getItem("languages")){
-     const langData=JSON.parse(localStorage.getItem("languages"))
+    if (localStorage.getItem("languages")) {
+      const langData = JSON.parse(localStorage.getItem("languages"));
       dispatch(addLanguages(langData));
-    }
-    else if (languages.length === 0) {
+    } else if (languages.length === 0) {
       const fetchLanguages = async () => {
         const res = await axios.request(getLanguagesOptions(apiUrl, apiKey));
         const languages = findCommonLanguages(
@@ -54,18 +52,18 @@ const Ide = () => {
           res.data
         );
         dispatch(addLanguages(languages));
-        localStorage.setItem("languages",JSON.stringify(languages))
+        localStorage.setItem("languages", JSON.stringify(languages));
       };
-       fetchLanguages();
+      fetchLanguages();
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('sourceCode', JSON.stringify(sourceCode));
+    localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
   }, [sourceCode]);
 
   useEffect(() => {
-    localStorage.setItem('theme', JSON.stringify(theme));
+    localStorage.setItem("theme", JSON.stringify(theme));
   }, [theme]);
 
   const handleOption = (e) => {
@@ -74,13 +72,13 @@ const Ide = () => {
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
     if (mLanguage) setMonacoLanguage(mLanguage.id);
-    setSourceCode(defaultLanguages(mLanguage.id))
+    setSourceCode(defaultLanguages(mLanguage.id));
   };
 
   const handleSubmission = async () => {
-    if(!selectedLanguageId) {
-      alert("please select language first !!!!") 
-      return
+    if (!selectedLanguageId) {
+      alert("please select language first !!!!");
+      return;
     }
     setLoading(true);
     let token = null;
@@ -99,7 +97,6 @@ const Ide = () => {
           )
         );
         token = res.data.token;
-        console.log("Token is:", token);
       } catch (error) {
         console.error("Error during submission:", error);
       }
@@ -131,19 +128,17 @@ const Ide = () => {
             status == "Wrong Answer"
           ) {
             setOutput(res.data);
-            console.log("Final output is:", res.data);
             return;
           } else if (status === "Processing") {
-            console.log("Still processing, retrying...");
             await new Promise((resolve) => setTimeout(resolve, delay));
           } else {
             console.error("Unexpected status:", status);
             setOutput({
-              stderr:null,
-              stdout:null,
+              stderr: null,
+              stdout: null,
               status,
-              compileOutput:res.data?.compile_output
-            })
+              compileOutput: res.data?.compile_output,
+            });
             return;
           }
 
@@ -155,7 +150,7 @@ const Ide = () => {
         console.error("Error fetching submission result:", error);
       }
     };
-     await getSubmissionResult(token);
+    await getSubmissionResult(token);
 
     setLoading(false);
   };
