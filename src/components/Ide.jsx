@@ -22,14 +22,11 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const Ide = () => {
   const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
   const [selectedLanguageId, setSelectedLanguageId] = useState("");
-  //const [sourceCode, setSourceCode] = useState("");
   const [sourceCode, setSourceCode] = useState(() => {
     return JSON.parse(localStorage.getItem("sourceCode")) || "";
   });
   const [stdIn, setStdIn] = useState("");
   const [output, setOutput] = useState(null);
-  //three themes for now
-  //const [theme, setTheme] = useState("vs-dark");
   const [theme, setTheme] = useState(() => {
     return JSON.parse(localStorage.getItem("theme")) || "vs-dark";
   });
@@ -233,7 +230,7 @@ const Ide = () => {
       ) : (
         <Split
           sizes={[70, 30]}
-          minSize={70}
+          minSize={[0, 125]}
           gutterSize={10}
           direction="vertical"
           cursor="row-resize"
