@@ -3,34 +3,31 @@ import Split from "react-split";
 import axios from "axios";
 import Input from "./Input";
 import Output from "./Output";
-import "../styles.css";
+import "../../styles.css";
 import { useSelector, useDispatch } from "react-redux";
-import { addLanguages } from "../utils/languageSlice";
+import { addLanguages } from "../../utils/languageSlice";
 import Editor from "@monaco-editor/react";
-import {
-  getLanguagesOptions,
-  getSubmissionOptions,
-  postSubmissionOptions,
-} from "../constants/getApiOptions";
+import { getLanguagesOptions } from "../../constants/getApiOptions";
 import * as monaco from "monaco-editor";
-import { findCommonLanguages } from "../utils/findCommonLanguages";
-import { defaultLanguages } from "../constants/defaultLanguages";
+import { findCommonLanguages } from "../../utils/findCommonLanguages";
+import { setStdIn,setSourceCode,setLanguageId,setTheme } from "../../utils/ideSlice";
 
-const apiKey = import.meta.env.VITE_API_KEY;
-const apiUrl = import.meta.env.VITE_API_URL;
+const Ide = ({
+  setOpenExplorer,
+  openExplorer,
+  currentFile,
+  handleSubmission,
+  loading,
+  setLoading,
+}) => {
+  const user = useSelector((store) => store.user);
+  const sourceCode=useSelector(store=>store.ide.sourceCode)
+  const languageId=useSelector(store=>store.ide.languageId)
+  const theme =useSelector(store=>store.ide.theme)
 
-const Ide = () => {
   const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
-  const [selectedLanguageId, setSelectedLanguageId] = useState("");
-  const [sourceCode, setSourceCode] = useState(() => {
-    return JSON.parse(localStorage.getItem("sourceCode")) || "";
-  });
-  const [stdIn, setStdIn] = useState("");
-  const [output, setOutput] = useState(null);
-  const [theme, setTheme] = useState(() => {
-    return JSON.parse(localStorage.getItem("theme")) || "vs-dark";
-  });
-  const [loading, setLoading] = useState(false);
+
+  
 
   const languages = useSelector((state) => state.languages);
   const [monacoLanguage, setMonacoLanguage] = useState("plaintext");
@@ -56,110 +53,48 @@ const Ide = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
-  }, [sourceCode]);
+    if (!user) {
+      console.log("here isnt "+user);
+      localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
+      localStorage.setItem("theme", JSON.stringify(theme));
+      localStorage.setItem("languageId",JSON.stringify(languageId))
+    } else {
+      //TODO: apply hre updating related to firebase
+    }
+  }, [sourceCode, theme,languageId]);
 
-  useEffect(() => {
-    localStorage.setItem("theme", JSON.stringify(theme));
-  }, [theme]);
+
+  // cant load files now when the user is signed in
+  // useEffect(() => {
+  //   if (user && currentFile?.sourceCode) {
+  //     setSourceCode(currentFile.sourceCode);
+  //   }
+  // }, [user, currentFile]);
 
   const handleOption = (e) => {
     const selectedId = e.target.value;
-    setSelectedLanguageId(selectedId);
+    //setSelectedLanguageId(selectedId);
+    dispatch(setLanguageId(selectedId))
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
     if (mLanguage) setMonacoLanguage(mLanguage.id);
-    setSourceCode(defaultLanguages(mLanguage.id));
-  };
-
-  const handleSubmission = async () => {
-    if (!selectedLanguageId) {
-      alert("please select language first !!!!");
-      return;
-    }
-    setLoading(true);
-    let token = null;
-
-    //TODO move below this two functions to utils
-    // post submission and getting token
-    const postSubmission = async () => {
-      try {
-        const res = await axios.request(
-          postSubmissionOptions(
-            apiUrl,
-            apiKey,
-            sourceCode,
-            selectedLanguageId,
-            stdIn
-          )
-        );
-        token = res.data.token;
-      } catch (error) {
-        console.error("Error during submission:", error);
-      }
-    };
-
-    await postSubmission();
-
-    // Proceed only if the token is available
-    if (!token) {
-      console.error("No token received......................");
-      return;
-    }
-
-    const getSubmissionResult = async (token) => {
-      try {
-        let attempt = 0;
-        const maxAttempts = 3;
-        const delay = 2000;
-
-        while (attempt < maxAttempts) {
-          const res = await axios.request(
-            getSubmissionOptions(apiUrl, apiKey, token)
-          );
-          const status = res.data.status?.description;
-
-          if (
-            status === "In Queue" ||
-            status == "Accepted" ||
-            status == "Wrong Answer"
-          ) {
-            setOutput(res.data);
-            return;
-          } else if (status === "Processing") {
-            await new Promise((resolve) => setTimeout(resolve, delay));
-          } else {
-            console.error("Unexpected status:", status);
-            setOutput({
-              stderr: null,
-              stdout: null,
-              status,
-              compileOutput: res.data?.compile_output,
-            });
-            return;
-          }
-
-          attempt++;
-        }
-
-        console.error("Exceeded maximum attempts. Processing took too long.");
-      } catch (error) {
-        console.error("Error fetching submission result:", error);
-      }
-    };
-    await getSubmissionResult(token);
-
-    setLoading(false);
+    //setSourceCode(defaultLanguages(mLanguage.id)); //what is this for???
   };
 
   const handleStdIn = (val) => {
-    setStdIn(val);
+    dispatch(setStdIn(val))
   };
 
   return (
     <div className="h-full flex flex-col w-full">
       <div className="flex justify-between px-4 py-2 items-center">
         <div className="flex gap-3">
+          {!openExplorer && (
+            <button className="" onClick={() => setOpenExplorer((val) => !val)}>
+              {`⏩`}
+            </button>
+          )}
+
           <button
             className="bg-slate-400"
             onClick={() => setHideInputAndOutput((val) => !val)}
@@ -168,7 +103,7 @@ const Ide = () => {
           </button>
           <div>
             <select
-              value={selectedLanguageId}
+              value={languageId}
               onChange={handleOption}
               style={{ backgroundColor: "white", color: "black" }}
               disabled={languages.length === 0}
@@ -200,7 +135,7 @@ const Ide = () => {
         <div>
           <select
             value={theme}
-            onChange={(e) => setTheme(e.target.value)}
+            onChange={(e) => dispatch(setTheme(e.target.value))}
             className="bg-slate-500"
           >
             <option value="vs-dark">Dark</option>
@@ -216,7 +151,7 @@ const Ide = () => {
             language={monacoLanguage}
             defaultValue={""}
             value={sourceCode}
-            onChange={(value) => setSourceCode(value)}
+            onChange={(value) => dispatch(setSourceCode(value))}
             theme={theme}
             options={{
               fontSize: 14,
@@ -242,7 +177,7 @@ const Ide = () => {
               language={monacoLanguage}
               theme={theme}
               value={sourceCode}
-              onChange={(value) => setSourceCode(value)}
+              onChange={(value) => dispatch(setSourceCode(value))}
               options={{
                 fontSize: 14,
                 minimap: { enabled: true },
@@ -265,7 +200,7 @@ const Ide = () => {
                 <Input handleStdIn={handleStdIn} />
               </div>
               <div className="flex-grow">
-                <Output output={output} />
+                <Output />
               </div>
             </Split>
           </div>

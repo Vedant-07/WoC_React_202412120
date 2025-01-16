@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-
-const Output = ({ output }) => {
+import { useSelector } from "react-redux";
+const Output = () => {
+  const output = useSelector((store) => store.ide.output);
   return (
     <div className="flex flex-grow h-full flex-col">
       <div className="flex justify-between items-center p-3">

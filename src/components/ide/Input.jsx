@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 const Input = ({ handleStdIn }) => {
   const fileInputRef = useRef(null);
-  const [fileName, setFileName] = useState("");
+  //const [fileName, setFileName] = useState("");
   const [fileContent, setFileContent] = useState("");
+  
 
   const handleFileClick = () => {
     fileInputRef.current.click();
@@ -16,13 +17,10 @@ const Input = ({ handleStdIn }) => {
       alert("File is too large!");
       return;
     }
-    let maxLength = 20;
+
     if (file) {
-      setFileName(
-        file.name.length > maxLength
-          ? file.name.substring(0, maxLength) + "..."
-          : file.name
-      );
+      //setFileName( file.name);
+      //TODO: understand this code
       const reader = new FileReader();
       reader.onload = (e) => {
         setFileContent(e.target.result);
@@ -46,7 +44,7 @@ const Input = ({ handleStdIn }) => {
           >
             Choose File{" "}
           </button>{" "}
-          {fileName.length > 0 ? fileName : ""}{" "}
+          {/* TODO:add file name afterwards for display */}
         </div>
         <input
           type="file"

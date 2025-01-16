@@ -25,7 +25,7 @@ const Body = () => {
             })
           );
         } else {
-          dispatch(removeUser);
+          dispatch(removeUser());
         }
         useLoading(false);
       });

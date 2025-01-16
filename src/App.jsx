@@ -6,7 +6,6 @@ import LoginPage from "./components/LoginPage";
 import CodeEditor from "./components/CodeEditor";
 
 function App() {
-  const [count, setCount] = useState(0);
 
   return (
     //implementing router here
