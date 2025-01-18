@@ -11,6 +11,7 @@ import { getLanguagesOptions } from "../../constants/getApiOptions";
 import * as monaco from "monaco-editor";
 import { findCommonLanguages } from "../../utils/findCommonLanguages";
 import { setStdIn,setSourceCode,setLanguageId,setTheme } from "../../utils/ideSlice";
+import { defaultLanguages } from "../../constants/defaultLanguages";
 
 const Ide = ({
   setOpenExplorer,
@@ -53,16 +54,28 @@ const Ide = ({
   }, []);
 
   useEffect(() => {
-    if (!user) {
+    if (!user) { 
       
       localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
       localStorage.setItem("theme", JSON.stringify(theme));
-      localStorage.setItem("languageId",JSON.stringify(languageId))
+      //localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
       //TODO: apply hre updating related to firebase
 
     }
-  }, [sourceCode, theme,languageId]);
+  }, [sourceCode, theme]);
+
+  useEffect(()=>{
+    if(!user)
+    {
+      console.log("is this triggered ????????????????????????//");
+      localStorage.setItem("languageId",JSON.stringify(languageId))
+      const defaultLanguage=defaultLanguages(+languageId)
+      dispatch(setSourceCode(defaultLanguage))
+      localStorage.setItem("sourceCode",JSON.stringify(defaultLanguage))
+      //setSourceCode(defaultLanguage)
+    }
+  },[languageId])
 
 
   //cant load files now when the user is signed in
@@ -83,7 +96,7 @@ const Ide = ({
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
     if (mLanguage) setMonacoLanguage(mLanguage.id);
-    //setSourceCode(defaultLanguages(mLanguage.id)); //what is this for???
+    setSourceCode(defaultLanguages(mLanguage.id)); //what is this for???
   };
 
   const handleStdIn = (val) => {
@@ -154,7 +167,7 @@ const Ide = ({
         <div className="flex-grow ">
           <Editor
             language={monacoLanguage}
-            defaultValue={""}
+            //defaultValue={""}
             value={sourceCode}
             onChange={(value) => dispatch(setSourceCode(value))}
             theme={theme}
@@ -178,7 +191,7 @@ const Ide = ({
         >
           <div className="flex-grow">
             <Editor
-              defaultValue=""
+              //defaultValue=""
               language={monacoLanguage}
               theme={theme}
               value={sourceCode}

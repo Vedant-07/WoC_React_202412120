@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 
 const Input = ({ handleStdIn }) => {
   const fileInputRef = useRef(null);
-  //const [fileName, setFileName] = useState("");
   const [fileContent, setFileContent] = useState("");
   
 
@@ -19,7 +18,6 @@ const Input = ({ handleStdIn }) => {
     }
 
     if (file) {
-      //setFileName( file.name);
       //TODO: understand this code
       const reader = new FileReader();
       reader.onload = (e) => {

@@ -1,8 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState={
-    name:"",
-    languageId:"",
+    openFileExplorer:false,
     isFileExplorerChanged:false,
     isEditFile:false,
     userFiles:null,
@@ -14,12 +13,6 @@ const fileSlice=createSlice({
     name:"fileState",
     initialState,
     reducers:{
-        setFileLanguageId:(state,action)=>{
-            state.languageId=action.payload
-        },
-        setFileName:(state,action)=>{
-            state.name=action.payload
-        },
         setUserFiles:(state,action)=>{
             state.userFiles=action.payload
         },
@@ -42,6 +35,6 @@ const fileSlice=createSlice({
     }
 })
 
-export const { setFileName ,setFileLanguageId,setIsFileExplorerChanged,setUserFiles,setSelectedFileId,setCurrentFile,setIsEditFile }=fileSlice.actions
+export const { setIsFileExplorerChanged,setUserFiles,setSelectedFileId,setCurrentFile,setIsEditFile }=fileSlice.actions
 
 export default fileSlice.reducer

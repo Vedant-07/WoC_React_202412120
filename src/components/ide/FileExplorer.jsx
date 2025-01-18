@@ -80,7 +80,6 @@ const FileExplorer = ({
       updatedAt: fileData.updatedAt.toDate().toISOString(),
     };
 
-    console.log(fileSnap.data());
     dispatch(setCurrentFile(serializableFileData))
   };
 

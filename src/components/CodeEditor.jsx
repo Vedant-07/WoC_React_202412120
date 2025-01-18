@@ -10,6 +10,7 @@ const apiKey = import.meta.env.VITE_API_KEY;
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const CodeEditor = () => {
+  const user=useSelector(s=>s.user)
   const stdIn = useSelector((store) => store.ide.stdIn);
   const sourceCode = useSelector((store) => store.ide.sourceCode);
   const languageId = useSelector((store) => store.ide.languageId);
@@ -57,7 +58,17 @@ const CodeEditor = () => {
 
   return (
     <div className="h-screen w-full">
-      <Split
+      {!user ? 
+      <div className="h-full flex-grow bg-white">
+      <Ide
+        setOpenExplorer={setOpenExplorer}
+        openExplorer={openExplorer}
+        handleSubmission={handleSubmission}
+        setLoading={setLoading}
+        loading={loading}
+      />
+  </div> :
+    <Split
         sizes={[20, 80]}
         minSize={[150, 800]}
         gutterSize={9}
@@ -65,7 +76,7 @@ const CodeEditor = () => {
         cursor="col-resize"
         className="split flex h-full"
       >
-        {openExplorer ? (
+        {false ? (
           <div className="h-full bg-gray-100 overflow-auto">
             <FileExplorer
               setOpenExplorer={setOpenExplorer}
@@ -76,6 +87,7 @@ const CodeEditor = () => {
         ) : (
           <div style={{ display: "none" }} />
         )}
+
         <div className="h-full flex-grow bg-white">
           <Ide
             setOpenExplorer={setOpenExplorer}
@@ -84,9 +96,12 @@ const CodeEditor = () => {
             setLoading={setLoading}
             loading={loading}
           />
-        </div>
-      </Split>
-    </div>
+        </div> 
+        </Split>
+    
+  }
+      </div> 
+      
   );
 };
 
