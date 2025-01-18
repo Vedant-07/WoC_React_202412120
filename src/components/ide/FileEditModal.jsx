@@ -1,15 +1,66 @@
-import React from 'react'
+import { addDoc, collection, Timestamp, updateDoc ,doc} from 'firebase/firestore'
+import React, { useState } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setFileName,setFileLanguageId,setIsHandleAddFile,setIsHandleUpdateFile } from '../../utils/fileSlice'
+import { defaultLanguages } from '../../constants/defaultLanguages'
+import { setIsFileExplorerChanged} from '../../utils/fileSlice'
+import { db } from '../../utils/firebase'
 
-const FileEditModal = ({ setIsModalOpen,file}) => {
+const FileEditModal = ({ setIsModalOpen}) => {
   const languages=useSelector(store=>store.languages)
-  const fileName=useSelector(store=>store.file.fileName)
-  const fileLanguageId=useSelector(store=>store.file.fileLanguageId)
+  const user=useSelector(s=>s.user)
+  const currentFile=useSelector(s=>s.file.currentFile)
+  const selectedFileId=useSelector(s=>s.file.selectedFileId)
+  //const fileName=useSelector(store=>store.file.fileName)
+  //const fileLanguageId=useSelector(store=>store.file.fileLanguageId)
+  const [fileName,setFileName]=useState("")
+  const [fileLanguageId,setFileLanguageId]=useState("")
+
   const isEditFile=useSelector(store=>store.file.isEditFile)
+
   const dispatch=useDispatch()
-  console.log("in fileEdiModal "+fileLanguageId)
-  console.log("in fileModal "+fileName);
+  
+
+
+  const handleAddFile=async()=>{
+    const filesRef=collection(db,"files")
+    
+    const defaultCode=defaultLanguages(+fileLanguageId)
+     
+    const defaultFileData={
+      createdAt:Timestamp.fromDate(new Date()),
+      updatedAt:Timestamp.fromDate(new Date()),
+      isDefault:false,
+      languageId:fileLanguageId,
+      name:fileName,
+      sourceCode:defaultCode,
+      userId:user.uid
+    }
+    await addDoc(filesRef,defaultFileData)
+
+    dispatch(setIsFileExplorerChanged(true))
+
+    setIsModalOpen(false)
+  }
+
+  const handleUpdateFile=async()=>{
+     const fileRef=doc(db,"files",selectedFileId)
+     await updateDoc(fileRef,{
+      name:fileName,
+      languageId:fileLanguageId
+     })
+     setIsModalOpen(false)
+     dispatch(setIsFileExplorerChanged(true))
+  }
+
+  useEffect(()=>{
+    if(!isEditFile) return
+
+    setFileName(currentFile.name)
+    setFileLanguageId(currentFile.languageId)
+  },[isEditFile])
+
+  
   
   //make a temporary state to store fileName and fileType  && when clicked on button dispatch action to update fileName & fileType 
 
@@ -27,7 +78,7 @@ const FileEditModal = ({ setIsModalOpen,file}) => {
                 className="w-full border rounded px-3 py-2"
                 placeholder="Enter file name"
                 value={fileName || ""}
-                onChange={(e) => dispatch(setFileName(e.target.value))}
+                onChange={(e) => setFileName(e.target.value)}
               />
             </div>
             <div className="mb-4">
@@ -35,7 +86,7 @@ const FileEditModal = ({ setIsModalOpen,file}) => {
               <select
                 className="w-full border rounded px-3 py-2"
                 value={fileLanguageId}
-                onChange={(e) => dispatch(setFileLanguageId(e.target.value))}
+                onChange={(e) => setFileLanguageId(e.target.value)}
               >
                 <option value="" disabled>
                   Select file type
@@ -59,7 +110,7 @@ const FileEditModal = ({ setIsModalOpen,file}) => {
               {!isEditFile?<>
                 <button
                 className="px-4 py-2 bg-blue-500 text-white rounded"
-                onClick={()=> dispatch(setIsHandleAddFile(true)) }
+                onClick={handleAddFile }
                 disabled={!fileName || !fileLanguageId}
               >
                 Add File
@@ -68,7 +119,7 @@ const FileEditModal = ({ setIsModalOpen,file}) => {
               <>
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded"
-                onClick={()=>dispatch(setIsHandleUpdateFile(true))}
+                onClick={handleUpdateFile}
                 disabled={!fileName || !fileLanguageId}
               >
                 Update File

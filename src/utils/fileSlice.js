@@ -1,12 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState={
-    fileName:"",
-    fileLanguageId:"",
-    isHandleAddFile:false,
-    isHandleUpdate:false,
-    isHandleDelete:false,
-    isEditFile:false
+    name:"",
+    languageId:"",
+    isFileExplorerChanged:false,
+    isEditFile:false,
+    userFiles:null,
+    currentFile:null,
+    selectedFileId:null
 }
 
 const fileSlice=createSlice({
@@ -14,23 +15,33 @@ const fileSlice=createSlice({
     initialState,
     reducers:{
         setFileLanguageId:(state,action)=>{
-            state.fileLanguageId=action.payload
+            state.languageId=action.payload
         },
         setFileName:(state,action)=>{
-            state.fileName=action.payload
+            state.name=action.payload
         },
-        setIsHandleAddFile:(state,action)=>{
-            state.isHandleAddFile=action.payload
+        setUserFiles:(state,action)=>{
+            state.userFiles=action.payload
+        },
+        setSelectedFileId:(state,action)=>{
+            state.selectedFileId=action.payload
+        },
+        setCurrentFile:(state,action)=>{
+            state.currentFile=action.payload
         },
         setIsEditFile:(state,action)=>{
             state.isEditFile=action.payload
         },
-        setIsHandleUpdateFile:(state,action)=>{
-            state.isHandleUpdateFile=(action.payload)
-        }
+        setIsFileExplorerChanged:(state,action)=>{
+            state.isFileExplorerChanged=action.payload
+        },
+        setFile: (state, action) => {
+            // Update multiple fields at once
+            return { ...state, ...action.payload };
+          },
     }
 })
 
-export const { setFileName ,setFileLanguageId,setIsHandleAddFile,setIsEditFile,setIsHandleUpdateFile }=fileSlice.actions
+export const { setFileName ,setFileLanguageId,setIsFileExplorerChanged,setUserFiles,setSelectedFileId,setCurrentFile,setIsEditFile }=fileSlice.actions
 
 export default fileSlice.reducer

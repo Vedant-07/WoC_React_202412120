@@ -15,7 +15,6 @@ import { setStdIn,setSourceCode,setLanguageId,setTheme } from "../../utils/ideSl
 const Ide = ({
   setOpenExplorer,
   openExplorer,
-  currentFile,
   handleSubmission,
   loading,
   setLoading,
@@ -24,6 +23,7 @@ const Ide = ({
   const sourceCode=useSelector(store=>store.ide.sourceCode)
   const languageId=useSelector(store=>store.ide.languageId)
   const theme =useSelector(store=>store.ide.theme)
+  const currentFile=useSelector(store=>store.file.currentFile)
 
   const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
 
@@ -54,22 +54,27 @@ const Ide = ({
 
   useEffect(() => {
     if (!user) {
-      console.log("here isnt "+user);
+      
       localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
       localStorage.setItem("theme", JSON.stringify(theme));
       localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
       //TODO: apply hre updating related to firebase
+
     }
   }, [sourceCode, theme,languageId]);
 
 
-  // cant load files now when the user is signed in
-  // useEffect(() => {
-  //   if (user && currentFile?.sourceCode) {
-  //     setSourceCode(currentFile.sourceCode);
-  //   }
-  // }, [user, currentFile]);
+  //cant load files now when the user is signed in
+  useEffect(() => {
+    
+    if (user && currentFile?.sourceCode && currentFile?.languageId ) {
+      
+      dispatch(setSourceCode(currentFile.sourceCode));
+      dispatch(setLanguageId(currentFile.languageId));
+      
+    }
+  }, [user, currentFile]);
 
   const handleOption = (e) => {
     const selectedId = e.target.value;

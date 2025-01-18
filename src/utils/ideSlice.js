@@ -27,7 +27,6 @@ const ideSlice = createSlice({
       state.output = action.payload;
     },
     setIde: (state, action) => {
-      // Update multiple fields at once
       return { ...state, ...action.payload };
     },
   },

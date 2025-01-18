@@ -1,6 +1,6 @@
 export const defaultLanguages = (id) => {
   switch (id) {
-    case "c":
+    case 75:
       return `#include <stdio.h>
 
             int main()
@@ -9,28 +9,28 @@ export const defaultLanguages = (id) => {
             
                 return 0;
             }`;
-    case "cpp":
+    case 76:
       return `#include <iostream>
             int main()
             {
                 std::cout<<"Hello World";
                 return 0;
             }`;
-    case "csharp":
+    case 51:
       return `using System;
             class HelloWorld {
               static void Main() {
                 Console.WriteLine("Hello World");
               }
             }`;
-    case "go":
+    case 60:
       return `package main
             import "fmt"
             
             func main() {
                 fmt.Println("Hello World")
             }`;
-    case "java":
+    case 62:
       return `public class Main
             {
                 public static void main(String[] args) {
@@ -38,17 +38,19 @@ export const defaultLanguages = (id) => {
                 }
             }
             `;
-    case "javascript":
+    case 63:
       return `console.log('Hello World');`;
-    case "kotlin":
+    case 78:
       return `fun main() {
                 println("Hello World")
             }`;
-    case "python":
+    case 70:
       return `print ('Hello World')`;
-    case "php":
+    case 68:
       return `echo "Hello World";`;
+    case 80:
+      return `print("Hello World")`
     default:
-      return `will add default code for this language later | try other language to get default code to get started`;
+      return ` will add default code for this language later | try other popular language to get default code to get started `;
   }
 };
