@@ -75,6 +75,7 @@ const CodeEditor = () => {
         direction="horizontal"
         cursor="col-resize"
         className="split flex h-full"
+        dragInterval={20}
       >
         {false ? (
           <div className="h-full bg-gray-100 overflow-auto">

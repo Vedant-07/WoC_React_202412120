@@ -163,67 +163,58 @@ const Ide = ({
         </div>
       </div>
 
-      {hideInputAndOutput ? (
-        <div className="flex-grow ">
-          <Editor
-            language={monacoLanguage}
-            //defaultValue={""}
-            value={sourceCode}
-            onChange={(value) => dispatch(setSourceCode(value))}
-            theme={theme}
-            options={{
-              fontSize: 14,
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              wordWrap: "on",
-            }}
-            className="flex-grow"
-          />
-        </div>
-      ) : (
-        <Split
-          sizes={[70, 30]}
-          minSize={[0, 125]}
-          gutterSize={10}
-          direction="vertical"
-          cursor="row-resize"
-          className="flex-grow split"
-        >
-          <div className="flex-grow">
-            <Editor
-              //defaultValue=""
-              language={monacoLanguage}
-              theme={theme}
-              value={sourceCode}
-              onChange={(value) => dispatch(setSourceCode(value))}
-              options={{
-                fontSize: 14,
-                minimap: { enabled: true },
-                scrollBeyondLastLine: false,
-                wordWrap: "on",
-              }}
-            />
-          </div>
+<Split
+  sizes={hideInputAndOutput ? [70, 30] : [100, 0]}
+  minSize={[0, hideInputAndOutput ? 125 : 0]} 
+  gutterSize={10}
+  direction="vertical"
+  cursor="row-resize"
+  className="flex-grow split overflow-hidden" 
+  dragInterval={20}
+>
+  
+  <div className="flex-grow h-full">
+    <Editor
+      language={monacoLanguage}
+      theme={theme}
+      value={sourceCode}
+      onChange={(value) => dispatch(setSourceCode(value))}
+      options={{
+        fontSize: 14,
+        minimap: { enabled: true },
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+      }}
+    />
+  </div>
 
-          <div className="h-full">
-            <Split
-              sizes={[50, 50]}
-              minSize={360}
-              gutterSize={10}
-              direction="horizontal"
-              cursor="col-resize"
-              className="flex h-full"
-            >
-              <div className="flex-grow">
-                <Input handleStdIn={handleStdIn} />
-              </div>
-              <div className="flex-grow">
-                <Output />
-              </div>
-            </Split>
-          </div>
-        </Split>
-      )}
+  
+  {hideInputAndOutput ? (
+    <div className="flex h-full">
+      <Split
+        sizes={[50, 50]}
+        minSize={[180, 150]} 
+        gutterSize={10}
+        direction="horizontal"
+        cursor="col-resize"
+        className="flex-grow flex"
+        dragInterval={20}
+      >
+        
+        <div className="flex-grow overflow-auto">
+          <Input handleStdIn={handleStdIn} />
+        </div>
+
+        <div className="flex-grow overflow-auto">
+          <Output />
+        </div>
+        
+      </Split>
+    </div>
+  ) : (
+    <div className="hidden"></div> 
+  )}
+</Split>      
     </div>
   );
 };
