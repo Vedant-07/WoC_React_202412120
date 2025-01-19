@@ -10,12 +10,14 @@ import Editor from "@monaco-editor/react";
 import { getLanguagesOptions } from "../../constants/getApiOptions";
 import * as monaco from "monaco-editor";
 import { findCommonLanguages } from "../../utils/findCommonLanguages";
-import { setStdIn,setSourceCode,setLanguageId,setTheme } from "../../utils/ideSlice";
+import { setStdIn,setSourceCode,setLanguageId,setTheme, setShowIO } from "../../utils/ideSlice";
 import { defaultLanguages } from "../../constants/defaultLanguages";
+import { setIsFileExplorerChanged, setOpenFileExplorer, setSelectedFileId, setUserFiles } from "../../utils/fileSlice";
+import { db } from "../../utils/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { debounce } from "../../utils/debounce";
 
 const Ide = ({
-  setOpenExplorer,
-  openExplorer,
   handleSubmission,
   loading,
   setLoading,
@@ -25,8 +27,10 @@ const Ide = ({
   const languageId=useSelector(store=>store.ide.languageId)
   const theme =useSelector(store=>store.ide.theme)
   const currentFile=useSelector(store=>store.file.currentFile)
-
-  const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
+  const openFileExplorer=useSelector(s=>s.file.openFileExplorer)
+  const selectedFileId=useSelector(s=>s.file.selectedFileId)
+  //const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
+  const showIO=useSelector(s=>s.ide.showIO)
 
   
 
@@ -61,6 +65,27 @@ const Ide = ({
       //localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
       //TODO: apply hre updating related to firebase
+      //create a query to update sourceCode
+      const fileRef=doc(db,"files",selectedFileId)
+      const userRef=doc(db,"users",user.uid)
+
+      const updatedSourceCode=async()=>{
+        await updateDoc(fileRef,{sourceCode})
+      }
+
+      const updatedTheme=async()=>{
+        const newTheme={
+          "settings.theme":theme
+        }
+        await updateDoc(userRef,newTheme)
+      }
+
+      const delayCode=debounce(updatedSourceCode,1000)
+      const delayTheme=debounce(updatedTheme,500)
+
+      delayCode(sourceCode)
+      delayTheme(theme)
+      
 
     }
   }, [sourceCode, theme]);
@@ -68,12 +93,59 @@ const Ide = ({
   useEffect(()=>{
     if(!user)
     {
-      console.log("is this triggered ????????????????????????//");
+      
       localStorage.setItem("languageId",JSON.stringify(languageId))
       const defaultLanguage=defaultLanguages(+languageId)
       dispatch(setSourceCode(defaultLanguage))
       localStorage.setItem("sourceCode",JSON.stringify(defaultLanguage))
       //setSourceCode(defaultLanguage)
+    }
+    else{
+      console.log("new languageId "+languageId);
+      const fileRef=doc(db,"files",selectedFileId)
+      // const updatedLanguageId=async()=>{
+       
+      //   await updateDoc(fileRef,{languageId})
+        
+      // }
+      // const delayLanguageId=debounce(updatedLanguageId,500)
+      // //delayLanguageId(languageId)
+      const newLanguageId=async()=>{
+        await updateDoc(fileRef,{languageId})
+      }
+
+     newLanguageId()
+
+      dispatch(setLanguageId(languageId))
+
+      //check for sourceCode if its empty then replace with default code else let it be there
+      if(!sourceCode)
+      {
+        const defaultSourceCode=defaultLanguages(+languageId)
+        console.log("it runnned ........................");
+        dispatch(setSourceCode(defaultSourceCode))
+
+        const updatedSourceCode=async()=>{
+          await updateDoc(fileRef,{sourceCode:defaultSourceCode})
+        }
+  
+         updatedSourceCode()
+        
+        
+        
+
+        dispatch(setUserFiles(null))
+        dispatch(setIsFileExplorerChanged(true))
+        
+      }
+      else
+      {
+        dispatch(setUserFiles(null))
+        dispatch(setIsFileExplorerChanged(true))
+      }
+      //trigger re render of file explorer
+      
+
     }
   },[languageId])
 
@@ -107,15 +179,15 @@ const Ide = ({
     <div className="h-full flex flex-col w-full">
       <div className="flex justify-between px-4 py-2 items-center">
         <div className="flex gap-3">
-          {!openExplorer && (
-            <button className="" onClick={() => setOpenExplorer((val) => !val)}>
+          {!openFileExplorer && (
+            <button className="" onClick={() => dispatch(setOpenFileExplorer(true))}>
               {`⏩`}
             </button>
           )}
 
           <button
             className="bg-slate-400"
-            onClick={() => setHideInputAndOutput((val) => !val)}
+            onClick={() => dispatch(setShowIO(!showIO))}
           >
             I/O
           </button>
@@ -164,8 +236,8 @@ const Ide = ({
       </div>
 
 <Split
-  sizes={hideInputAndOutput ? [70, 30] : [100, 0]}
-  minSize={[0, hideInputAndOutput ? 125 : 0]} 
+  sizes={showIO ? [70, 30] : [100, 0]}
+  minSize={[0, showIO ? 125 : 0]} 
   gutterSize={10}
   direction="vertical"
   cursor="row-resize"
@@ -189,7 +261,7 @@ const Ide = ({
   </div>
 
   
-  {hideInputAndOutput ? (
+  {showIO ? (
     <div className="flex h-full">
       <Split
         sizes={[50, 50]}

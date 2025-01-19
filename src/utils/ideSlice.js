@@ -5,12 +5,16 @@ const initialState = {
   theme: JSON.parse(localStorage.getItem("theme")) || "vs-dark",
   output: null,
   languageId: JSON.parse(localStorage.getItem("languageId")) || "",
+  showIO: true,
 };
 
 const ideSlice = createSlice({
   name: "ide",
-  initialState,  // Use initialState directly here
+  initialState, // Use initialState directly here
   reducers: {
+    setShowIO: (state, action) => {
+      state.showIO = action.payload;
+    },
     setStdIn: (state, action) => {
       state.stdIn = action.payload;
     },
@@ -39,6 +43,7 @@ export const {
   setLanguageId,
   setOutput,
   setIde,
+  setShowIO,
 } = ideSlice.actions;
 
 export default ideSlice.reducer;

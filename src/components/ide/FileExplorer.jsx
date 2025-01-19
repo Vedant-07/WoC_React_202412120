@@ -1,13 +1,12 @@
 import { collection, getDoc ,doc,query, where, getDocs, orderBy, deleteDoc} from "firebase/firestore";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentFile, setIsFileExplorerChanged, setSelectedFileId, setUserFiles,setIsEditFile } from "../../utils/fileSlice";
+import { setCurrentFile, setIsFileExplorerChanged, setSelectedFileId, setUserFiles,setIsEditFile, setOpenFileExplorer } from "../../utils/fileSlice";
 import { auth } from "../../utils/firebase";
 import FileEditModal from "./FileEditModal";
 import { db } from "../../utils/firebase";
 
 const FileExplorer = ({
-  setOpenExplorer,
   
   handleSelectedFileId,
   isModalOpen,
@@ -19,6 +18,7 @@ const FileExplorer = ({
   const selectedFileId = useSelector((store) => store.file.selectedFileId);
   const isFileExplorerChanged=useSelector(s=>s.file.isFileExplorerChanged)
   const languages=useSelector(s=>s.languages)
+  const openFileExplorer=useSelector(s=>s.file.openFileExplorer)
 
   const dispatch =useDispatch()
 
@@ -117,7 +117,7 @@ const FileExplorer = ({
           <button className="" onClick={handleAddButtonAction}>
             {`➕`}
           </button>
-          <button className="" onClick={() => setOpenExplorer((val) => !val)}>
+          <button className="" onClick={() => dispatch(setOpenFileExplorer(false))}>
             {`⏪`}
           </button>
         </div>

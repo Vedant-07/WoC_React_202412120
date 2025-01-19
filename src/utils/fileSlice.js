@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState={
-    openFileExplorer:false,
+    openFileExplorer:true,
     isFileExplorerChanged:false,
     isEditFile:false,
     userFiles:null,
@@ -13,6 +13,9 @@ const fileSlice=createSlice({
     name:"fileState",
     initialState,
     reducers:{
+        setOpenFileExplorer:(state,action)=>{
+            state.openFileExplorer=action.payload
+        },
         setUserFiles:(state,action)=>{
             state.userFiles=action.payload
         },
@@ -35,6 +38,6 @@ const fileSlice=createSlice({
     }
 })
 
-export const { setIsFileExplorerChanged,setUserFiles,setSelectedFileId,setCurrentFile,setIsEditFile }=fileSlice.actions
+export const { setIsFileExplorerChanged,setUserFiles,setSelectedFileId,setCurrentFile,setIsEditFile,setOpenFileExplorer }=fileSlice.actions
 
 export default fileSlice.reducer

@@ -14,10 +14,9 @@ const CodeEditor = () => {
   const stdIn = useSelector((store) => store.ide.stdIn);
   const sourceCode = useSelector((store) => store.ide.sourceCode);
   const languageId = useSelector((store) => store.ide.languageId);
+  const openFileExplorer=useSelector(s=>s.file.openFileExplorer)
 
   const dispatch = useDispatch();
-
-  const [openExplorer, setOpenExplorer] = useState(true);
 
   const [loading, setLoading] = useState(false);
 
@@ -61,8 +60,6 @@ const CodeEditor = () => {
       {!user ? 
       <div className="h-full flex-grow bg-white">
       <Ide
-        setOpenExplorer={setOpenExplorer}
-        openExplorer={openExplorer}
         handleSubmission={handleSubmission}
         setLoading={setLoading}
         loading={loading}
@@ -77,10 +74,9 @@ const CodeEditor = () => {
         className="split flex h-full"
         dragInterval={20}
       >
-        {false ? (
+        {openFileExplorer ? (
           <div className="h-full bg-gray-100 overflow-auto">
             <FileExplorer
-              setOpenExplorer={setOpenExplorer}
               isModalOpen={isModalOpen}
               setIsModalOpen={setIsModalOpen}
             />
@@ -91,8 +87,6 @@ const CodeEditor = () => {
 
         <div className="h-full flex-grow bg-white">
           <Ide
-            setOpenExplorer={setOpenExplorer}
-            openExplorer={openExplorer}
             handleSubmission={handleSubmission}
             setLoading={setLoading}
             loading={loading}
