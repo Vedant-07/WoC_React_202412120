@@ -18,6 +18,7 @@ import {
   setShowIO,
   setIdeAndIOPanel,
   setIOPanel,
+  setMonacoLanguage,
 } from "../../utils/ideSlice";
 import { defaultLanguages } from "../../constants/defaultLanguages";
 import {
@@ -43,15 +44,18 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
   const ioPanel = useSelector((s) => s.ide.ioPanel);
 
   const languages = useSelector((state) => state.languages);
-  const [monacoLanguage, setMonacoLanguage] = useState("plaintext");
+  const monacoLanguage=useSelector(s=>s.ide.monacoLanguage)
   const dispatch = useDispatch();
+
+  const apiKey = import.meta.env.VITE_API_KEY;
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     //fetching languages
     if (localStorage.getItem("languages")) {
       const langData = JSON.parse(localStorage.getItem("languages"));
       dispatch(addLanguages(langData));
-    } else if (languages.length === 0) {
+    } else {
       const fetchLanguages = async () => {
         const res = await axios.request(getLanguagesOptions(apiUrl, apiKey));
         const languages = findCommonLanguages(
@@ -61,16 +65,20 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
         dispatch(addLanguages(languages));
         localStorage.setItem("languages", JSON.stringify(languages));
       };
+      console.log("here for the lang...");
       fetchLanguages();
     }
   }, []);
 
   useEffect(() => {
-    if (!user || !selectedFileId) {
+    if (!user) {
+      //console.log("first render 2????");
       localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
       localStorage.setItem("theme", JSON.stringify(theme));
       //localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
+
+      if( !selectedFileId) return
       //TODO: apply hre updating related to firebase
       //create a query to update sourceCode
       const fileRef = doc(db, "files", selectedFileId);
@@ -96,11 +104,19 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
   }, [sourceCode, theme]);
 
   useEffect(() => {
-    if (!user) {
+    //console.log("before triggered before ini....."+!languageId);
+    //TODO: problem here
+    //console.log("after triggered before ini....."+languageId);
+    if (!user ) {
+      //make function for this not the useeffect 
       localStorage.setItem("languageId", JSON.stringify(languageId));
-      const defaultLanguage = defaultLanguages(+languageId);
-      dispatch(setSourceCode(defaultLanguage));
-      localStorage.setItem("sourceCode", JSON.stringify(defaultLanguage));
+
+      const mLanguage = languages.find((lang) => lang.languageId == languageId);
+    if (mLanguage) dispatch(setMonacoLanguage(mLanguage.id));
+    localStorage.setItem("monacoLanguage",JSON.stringify(monacoLanguage))
+      // const defaultLanguage = defaultLanguages(+languageId);
+      // dispatch(setSourceCode(defaultLanguage));
+      // localStorage.setItem("sourceCode", JSON.stringify(defaultLanguage));
       //setSourceCode(defaultLanguage)
     } else {
       const fileRef = doc(db, "files", selectedFileId);
@@ -154,8 +170,9 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
     dispatch(setLanguageId(selectedId));
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
-    if (mLanguage) setMonacoLanguage(mLanguage.id);
-    setSourceCode(defaultLanguages(mLanguage.id)); //what is this for???
+    if (mLanguage) dispatch(setMonacoLanguage(mLanguage.id));
+    localStorage.setItem("monacoLanguage",JSON.stringify(monacoLanguage))
+    dispatch(setSourceCode(defaultLanguages(+selectedId))); 
   };
 
   const handleStdIn = (val) => {
@@ -267,6 +284,8 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
         dragInterval={20}
         onDragEnd={handleDragEndIdeAndIOPanel}
       >
+        {monacoLanguage &&
+        
         <div className="flex-grow h-full">
           <Editor
             language={monacoLanguage}
@@ -281,6 +300,8 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
             }}
           />
         </div>
+        }
+        
 
         {showIO ? (
           <div className="flex h-full">

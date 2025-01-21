@@ -1,13 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  sourceCode: JSON.parse(localStorage.getItem("sourceCode")) || "",
+  sourceCode: JSON.parse(localStorage.getItem("sourceCode")) || "console.log('hello guest user')",
   theme: JSON.parse(localStorage.getItem("theme")) || "vs-dark",
   output: null,
-  languageId: JSON.parse(localStorage.getItem("languageId")) || "",
+  languageId: JSON.parse(localStorage.getItem("languageId")) || 63,
   showIO: true,
   ideAndIOPanel: [70, 30],
   ioPanel: [50, 50],
+  monacoLanguage:JSON.parse(localStorage.getItem("monacoLanguage")) || "javascript"
 };
 
 const ideSlice = createSlice({
@@ -38,6 +39,9 @@ const ideSlice = createSlice({
     setIOPanel: (state, action) => {
       state.ioPanel = action.payload;
     },
+    setMonacoLanguage:(state,action)=>{
+      state.monacoLanguage=action.payload
+    },
     setIde: (state, action) => {
       return { ...state, ...action.payload };
     },
@@ -54,6 +58,7 @@ export const {
   setShowIO,
   setIdeAndIOPanel,
   setIOPanel,
+  setMonacoLanguage
 } = ideSlice.actions;
 
 export default ideSlice.reducer;
