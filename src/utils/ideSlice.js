@@ -6,6 +6,8 @@ const initialState = {
   output: null,
   languageId: JSON.parse(localStorage.getItem("languageId")) || "",
   showIO: true,
+  ideAndIOPanel: [70, 30],
+  ioPanel: [50, 50],
 };
 
 const ideSlice = createSlice({
@@ -30,6 +32,12 @@ const ideSlice = createSlice({
     setOutput: (state, action) => {
       state.output = action.payload;
     },
+    setIdeAndIOPanel: (state, action) => {
+      state.ideAndIOPanel = action.payload;
+    },
+    setIOPanel: (state, action) => {
+      state.ioPanel = action.payload;
+    },
     setIde: (state, action) => {
       return { ...state, ...action.payload };
     },
@@ -44,6 +52,8 @@ export const {
   setOutput,
   setIde,
   setShowIO,
+  setIdeAndIOPanel,
+  setIOPanel,
 } = ideSlice.actions;
 
 export default ideSlice.reducer;

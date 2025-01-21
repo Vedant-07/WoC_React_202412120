@@ -10,29 +10,37 @@ import Editor from "@monaco-editor/react";
 import { getLanguagesOptions } from "../../constants/getApiOptions";
 import * as monaco from "monaco-editor";
 import { findCommonLanguages } from "../../utils/findCommonLanguages";
-import { setStdIn,setSourceCode,setLanguageId,setTheme, setShowIO } from "../../utils/ideSlice";
+import {
+  setStdIn,
+  setSourceCode,
+  setLanguageId,
+  setTheme,
+  setShowIO,
+  setIdeAndIOPanel,
+  setIOPanel,
+} from "../../utils/ideSlice";
 import { defaultLanguages } from "../../constants/defaultLanguages";
-import { setIsFileExplorerChanged, setOpenFileExplorer, setSelectedFileId, setUserFiles } from "../../utils/fileSlice";
+import {
+  setIsFileExplorerChanged,
+  setOpenFileExplorer,
+  setSelectedFileId,
+  setUserFiles,
+} from "../../utils/fileSlice";
 import { db } from "../../utils/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { debounce } from "../../utils/debounce";
 
-const Ide = ({
-  handleSubmission,
-  loading,
-  setLoading,
-}) => {
+const Ide = ({ handleSubmission, loading, setLoading }) => {
   const user = useSelector((store) => store.user);
-  const sourceCode=useSelector(store=>store.ide.sourceCode)
-  const languageId=useSelector(store=>store.ide.languageId)
-  const theme =useSelector(store=>store.ide.theme)
-  const currentFile=useSelector(store=>store.file.currentFile)
-  const openFileExplorer=useSelector(s=>s.file.openFileExplorer)
-  const selectedFileId=useSelector(s=>s.file.selectedFileId)
-  //const [hideInputAndOutput, setHideInputAndOutput] = useState(false);
-  const showIO=useSelector(s=>s.ide.showIO)
-
-  
+  const sourceCode = useSelector((store) => store.ide.sourceCode);
+  const languageId = useSelector((store) => store.ide.languageId);
+  const theme = useSelector((store) => store.ide.theme);
+  const currentFile = useSelector((store) => store.file.currentFile);
+  const openFileExplorer = useSelector((s) => s.file.openFileExplorer);
+  const selectedFileId = useSelector((s) => s.file.selectedFileId);
+  const showIO = useSelector((s) => s.ide.showIO);
+  const ideAndIOPanel = useSelector((s) => s.ide.ideAndIOPanel);
+  const ioPanel = useSelector((s) => s.ide.ioPanel);
 
   const languages = useSelector((state) => state.languages);
   const [monacoLanguage, setMonacoLanguage] = useState("plaintext");
@@ -58,113 +66,92 @@ const Ide = ({
   }, []);
 
   useEffect(() => {
-    if (!user) { 
-      
+    if (!user || !selectedFileId) {
       localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
       localStorage.setItem("theme", JSON.stringify(theme));
       //localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
       //TODO: apply hre updating related to firebase
       //create a query to update sourceCode
-      const fileRef=doc(db,"files",selectedFileId)
-      const userRef=doc(db,"users",user.uid)
+      const fileRef = doc(db, "files", selectedFileId);
+      const userRef = doc(db, "users", user.uid);
 
-      const updatedSourceCode=async()=>{
-        await updateDoc(fileRef,{sourceCode})
-      }
+      const updatedSourceCode = async () => {
+        await updateDoc(fileRef, { sourceCode });
+      };
 
-      const updatedTheme=async()=>{
-        const newTheme={
-          "settings.theme":theme
-        }
-        await updateDoc(userRef,newTheme)
-      }
+      const updatedTheme = async () => {
+        const newTheme = {
+          "settings.theme": theme,
+        };
+        await updateDoc(userRef, newTheme);
+      };
 
-      const delayCode=debounce(updatedSourceCode,1000)
-      const delayTheme=debounce(updatedTheme,500)
+      const delayCode = debounce(updatedSourceCode, 1000);
+      const delayTheme = debounce(updatedTheme, 500);
 
-      delayCode(sourceCode)
-      delayTheme(theme)
-      
-
+      delayCode(sourceCode);
+      delayTheme(theme);
     }
   }, [sourceCode, theme]);
 
-  useEffect(()=>{
-    if(!user)
-    {
-      
-      localStorage.setItem("languageId",JSON.stringify(languageId))
-      const defaultLanguage=defaultLanguages(+languageId)
-      dispatch(setSourceCode(defaultLanguage))
-      localStorage.setItem("sourceCode",JSON.stringify(defaultLanguage))
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem("languageId", JSON.stringify(languageId));
+      const defaultLanguage = defaultLanguages(+languageId);
+      dispatch(setSourceCode(defaultLanguage));
+      localStorage.setItem("sourceCode", JSON.stringify(defaultLanguage));
       //setSourceCode(defaultLanguage)
-    }
-    else{
-      console.log("new languageId "+languageId);
-      const fileRef=doc(db,"files",selectedFileId)
+    } else {
+      const fileRef = doc(db, "files", selectedFileId);
       // const updatedLanguageId=async()=>{
-       
+
       //   await updateDoc(fileRef,{languageId})
-        
+
       // }
       // const delayLanguageId=debounce(updatedLanguageId,500)
       // //delayLanguageId(languageId)
-      const newLanguageId=async()=>{
-        await updateDoc(fileRef,{languageId})
-      }
+      const newLanguageId = async () => {
+        await updateDoc(fileRef, { languageId });
+      };
 
-     newLanguageId()
+      newLanguageId();
 
-      dispatch(setLanguageId(languageId))
+      dispatch(setLanguageId(languageId));
 
       //check for sourceCode if its empty then replace with default code else let it be there
-      if(!sourceCode)
-      {
-        const defaultSourceCode=defaultLanguages(+languageId)
-        console.log("it runnned ........................");
-        dispatch(setSourceCode(defaultSourceCode))
+      if (!sourceCode) {
+        const defaultSourceCode = defaultLanguages(+languageId);
+        dispatch(setSourceCode(defaultSourceCode));
 
-        const updatedSourceCode=async()=>{
-          await updateDoc(fileRef,{sourceCode:defaultSourceCode})
-        }
-  
-         updatedSourceCode()
-        
-        
-        
+        const updatedSourceCode = async () => {
+          await updateDoc(fileRef, { sourceCode: defaultSourceCode });
+        };
 
-        dispatch(setUserFiles(null))
-        dispatch(setIsFileExplorerChanged(true))
-        
-      }
-      else
-      {
-        dispatch(setUserFiles(null))
-        dispatch(setIsFileExplorerChanged(true))
+        updatedSourceCode();
+
+        dispatch(setUserFiles(null));
+        dispatch(setIsFileExplorerChanged(true));
+      } else {
+        dispatch(setUserFiles(null));
+        dispatch(setIsFileExplorerChanged(true));
       }
       //trigger re render of file explorer
-      
-
     }
-  },[languageId])
-
+  }, [languageId]);
 
   //cant load files now when the user is signed in
   useEffect(() => {
-    
-    if (user && currentFile?.sourceCode && currentFile?.languageId ) {
-      
+    if (user && currentFile?.sourceCode && currentFile?.languageId) {
       dispatch(setSourceCode(currentFile.sourceCode));
       dispatch(setLanguageId(currentFile.languageId));
-      
     }
   }, [user, currentFile]);
 
   const handleOption = (e) => {
     const selectedId = e.target.value;
     //setSelectedLanguageId(selectedId);
-    dispatch(setLanguageId(selectedId))
+    dispatch(setLanguageId(selectedId));
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
     if (mLanguage) setMonacoLanguage(mLanguage.id);
@@ -172,7 +159,39 @@ const Ide = ({
   };
 
   const handleStdIn = (val) => {
-    dispatch(setStdIn(val))
+    dispatch(setStdIn(val));
+  };
+
+  const updateIdeAndIOPanel = async () => {
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      "editorState.ideAndIOPanel": ideAndIOPanel,
+    });
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    updateIdeAndIOPanel();
+  }, [ideAndIOPanel]);
+
+  const handleDragEndIdeAndIOPanel = (sizes) => {
+    dispatch(setIdeAndIOPanel(sizes));
+  };
+
+  const updateIOPanel = async () => {
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      "editorState.ioPanel": ioPanel,
+    });
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    updateIOPanel();
+  }, [ioPanel]);
+
+  const handleDragIOPanel = (sizes) => {
+    dispatch(setIOPanel(sizes));
   };
 
   return (
@@ -180,7 +199,10 @@ const Ide = ({
       <div className="flex justify-between px-4 py-2 items-center">
         <div className="flex gap-3">
           {!openFileExplorer && (
-            <button className="" onClick={() => dispatch(setOpenFileExplorer(true))}>
+            <button
+              className=""
+              onClick={() => dispatch(setOpenFileExplorer(true))}
+            >
               {`⏩`}
             </button>
           )}
@@ -235,58 +257,56 @@ const Ide = ({
         </div>
       </div>
 
-<Split
-  sizes={showIO ? [70, 30] : [100, 0]}
-  minSize={[0, showIO ? 125 : 0]} 
-  gutterSize={10}
-  direction="vertical"
-  cursor="row-resize"
-  className="flex-grow split overflow-hidden" 
-  dragInterval={20}
->
-  
-  <div className="flex-grow h-full">
-    <Editor
-      language={monacoLanguage}
-      theme={theme}
-      value={sourceCode}
-      onChange={(value) => dispatch(setSourceCode(value))}
-      options={{
-        fontSize: 14,
-        minimap: { enabled: true },
-        scrollBeyondLastLine: false,
-        wordWrap: "on",
-      }}
-    />
-  </div>
-
-  
-  {showIO ? (
-    <div className="flex h-full">
       <Split
-        sizes={[50, 50]}
-        minSize={[180, 150]} 
+        sizes={showIO ? ideAndIOPanel || [70, 30] : [100, 0]}
+        minSize={[0, showIO ? 125 : 0]}
         gutterSize={10}
-        direction="horizontal"
-        cursor="col-resize"
-        className="flex-grow flex"
+        direction="vertical"
+        cursor="row-resize"
+        className="flex-grow split overflow-hidden"
         dragInterval={20}
+        onDragEnd={handleDragEndIdeAndIOPanel}
       >
-        
-        <div className="flex-grow overflow-auto">
-          <Input handleStdIn={handleStdIn} />
+        <div className="flex-grow h-full">
+          <Editor
+            language={monacoLanguage}
+            theme={theme}
+            value={sourceCode}
+            onChange={(value) => dispatch(setSourceCode(value))}
+            options={{
+              fontSize: 14,
+              minimap: { enabled: true },
+              scrollBeyondLastLine: false,
+              wordWrap: "on",
+            }}
+          />
         </div>
 
-        <div className="flex-grow overflow-auto">
-          <Output />
-        </div>
-        
+        {showIO ? (
+          <div className="flex h-full">
+            <Split
+              sizes={ioPanel || [50, 50]}
+              minSize={[180, 150]}
+              gutterSize={10}
+              direction="horizontal"
+              cursor="col-resize"
+              className="flex-grow flex"
+              dragInterval={20}
+              onDragEnd={handleDragIOPanel}
+            >
+              <div className="flex-grow overflow-auto">
+                <Input handleStdIn={handleStdIn} />
+              </div>
+
+              <div className="flex-grow overflow-auto">
+                <Output />
+              </div>
+            </Split>
+          </div>
+        ) : (
+          <div className="hidden"></div>
+        )}
       </Split>
-    </div>
-  ) : (
-    <div className="hidden"></div> 
-  )}
-</Split>      
     </div>
   );
 };

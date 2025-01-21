@@ -5,16 +5,22 @@ import Split from "react-split";
 import FileExplorer from "./ide/FileExplorer";
 import { getSubmissionResult, postSubmission } from "../utils/apiHelpers";
 import { setOutput } from "../utils/ideSlice";
+import { setExpAndIdePanel, setOpenFileExplorer } from "../utils/fileSlice";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../utils/firebase";
+
 //TODO: move this somewhere else
 const apiKey = import.meta.env.VITE_API_KEY;
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const CodeEditor = () => {
-  const user=useSelector(s=>s.user)
+  const user = useSelector((s) => s.user);
   const stdIn = useSelector((store) => store.ide.stdIn);
   const sourceCode = useSelector((store) => store.ide.sourceCode);
   const languageId = useSelector((store) => store.ide.languageId);
-  const openFileExplorer=useSelector(s=>s.file.openFileExplorer)
+  const openFileExplorer = useSelector((s) => s.file.openFileExplorer);
+  const showIO = useSelector((s) => s.ide.showIO);
+  const expAndIdePanel = useSelector((s) => s.file.expAndIdePanel); //make this as a state in file exp
 
   const dispatch = useDispatch();
 
@@ -55,48 +61,82 @@ const CodeEditor = () => {
     }
   };
 
+  useEffect(() => {
+    // updating the code editor state to the user doc
+    const setEditorButtonLayout = async () => {
+      const userRef = doc(db, "users", user.uid);
+
+      await updateDoc(userRef, {
+        "editorState.showIO": showIO,
+        "editorState.openFileExplorer": openFileExplorer,
+      });
+    };
+
+    if (user && openFileExplorer !== undefined && showIO !== undefined)
+      //TODO: add debounce to this .....
+      setEditorButtonLayout();
+  }, [openFileExplorer, showIO]);
+
+  //use the useCallback here
+  const updateExpAndIdePanel = async () => {
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      "editorState.expAndIdePanel": expAndIdePanel,
+    });
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    updateExpAndIdePanel();
+  }, [expAndIdePanel]);
+
+  const handleDragEnd = (sizes) => {
+    dispatch(setExpAndIdePanel(sizes));
+    //add a ddebounce later
+  };
+
   return (
     <div className="h-screen w-full">
-      {!user ? 
-      <div className="h-full flex-grow bg-white">
-      <Ide
-        handleSubmission={handleSubmission}
-        setLoading={setLoading}
-        loading={loading}
-      />
-  </div> :
-    <Split
-        sizes={[20, 80]}
-        minSize={[150, 800]}
-        gutterSize={9}
-        direction="horizontal"
-        cursor="col-resize"
-        className="split flex h-full"
-        dragInterval={20}
-      >
-        {openFileExplorer ? (
-          <div className="h-full bg-gray-100 overflow-auto">
-            <FileExplorer
-              isModalOpen={isModalOpen}
-              setIsModalOpen={setIsModalOpen}
-            />
-          </div>
-        ) : (
-          <div style={{ display: "none" }} />
-        )}
-
+      {!user ? (
         <div className="h-full flex-grow bg-white">
           <Ide
             handleSubmission={handleSubmission}
             setLoading={setLoading}
             loading={loading}
           />
-        </div> 
+        </div>
+      ) : (
+        <Split
+          sizes={expAndIdePanel || [20, 80]}
+          minSize={[150, 500]}
+          gutterSize={9}
+          direction="horizontal"
+          cursor="col-resize"
+          className="split flex h-full"
+          dragInterval={20}
+          onDragEnd={handleDragEnd}
+        >
+          {openFileExplorer ? (
+            <div className="h-full bg-gray-100 overflow-auto">
+              <FileExplorer
+                isModalOpen={isModalOpen}
+                setIsModalOpen={setIsModalOpen}
+              />
+            </div>
+          ) : (
+            <div style={{ display: "none" }} />
+          )}
+
+          <div className="h-full flex-grow bg-white">
+            <Ide
+              handleSubmission={handleSubmission}
+              setLoading={setLoading}
+              loading={loading}
+            />
+          </div>
         </Split>
-    
-  }
-      </div> 
-      
+      )}
+    </div>
   );
 };
 

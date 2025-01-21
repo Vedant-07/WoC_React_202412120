@@ -5,9 +5,25 @@ import { useSelector, useDispatch } from "react-redux";
 import { auth, db } from "../utils/firebase";
 import { addUser, removeUser } from "../utils/userSlice";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, Timestamp,getDoc,collection, addDoc } from "firebase/firestore";
-import { setSelectedFileId } from "../utils/fileSlice";
-import { setTheme } from "../utils/ideSlice";
+import {
+  doc,
+  setDoc,
+  Timestamp,
+  getDoc,
+  collection,
+  addDoc,
+} from "firebase/firestore";
+import {
+  setExpAndIdePanel,
+  setOpenFileExplorer,
+  setSelectedFileId,
+} from "../utils/fileSlice";
+import {
+  setIdeAndIOPanel,
+  setIOPanel,
+  setShowIO,
+  setTheme,
+} from "../utils/ideSlice";
 
 const Body = () => {
   const [loading, setLoading] = useState(false);
@@ -30,9 +46,7 @@ const Body = () => {
         );
 
         try {
-
           const userRef = doc(db, "users", currentUser.uid);
-          
 
           const defaultUserData = {
             name: currentUser.displayName || "Anonymous",
@@ -43,37 +57,52 @@ const Body = () => {
             editorState: {
               cursorPosition: { line: 0, column: 0 },
               scrollPosition: { top: 0, left: 0 },
+              expAndIdePanel: [20, 80],
+              ideAndIOPanel: [70, 30],
+              ioPanel: [50, 50],
               splitSizes: [60, 40],
+              openFileExplorer: true,
+              showIO: true,
             },
             lastActiveFile: null,
           };
 
-          const defaultFileData={
-            createdAt:Timestamp.fromDate(new Date()),
-            updatedAt:Timestamp.fromDate(new Date()),
-            isDefault:true,
-            languageId:63,
-            name:"default",
-            sourceCode:"console.log('hi new user')",
-            userId:currentUser.uid
-          }
+          const defaultFileData = {
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date()),
+            isDefault: true,
+            languageId: 63,
+            name: "default",
+            sourceCode: "console.log('hi new user')",
+            userId: currentUser.uid,
+          };
 
           const filesRef = collection(db, "files");
 
-
           const userSnapshot = await getDoc(userRef);
           if (!userSnapshot._document) {
-          await setDoc(userRef, defaultUserData);
+            await setDoc(userRef, defaultUserData);
 
-          const fileDocRef = await addDoc(filesRef, defaultFileData);
+            const fileDocRef = await addDoc(filesRef, defaultFileData);
 
-          // Update lastActiveFile in user data
-          await setDoc(userRef, { lastActiveFile: fileDocRef.id },{merge:true});
+            // Update lastActiveFile in user data
+            await setDoc(
+              userRef,
+              { lastActiveFile: fileDocRef.id },
+              { merge: true }
+            );
           }
-          //get the lastAactivefile from userRef
-          const userData=await getDoc(userRef,"lastActiveFile")
-          dispatch(setSelectedFileId(userData.data().lastActiveFile))
-          dispatch(setTheme(userData.data().settings.theme))
+
+          //get the lastActiveFile from userRef
+          const userDataDoc = await getDoc(userRef);
+          const userData = userDataDoc.data();
+          dispatch(setSelectedFileId(userData.lastActiveFile));
+          dispatch(setTheme(userData.settings.theme));
+          dispatch(setOpenFileExplorer(userData.editorState.openFileExplorer));
+          dispatch(setShowIO(userData.editorState.showIO));
+          dispatch(setExpAndIdePanel(userData.editorState.expAndIdePanel));
+          dispatch(setIdeAndIOPanel(userData.editorState.ideAndIOPanel));
+          dispatch(setIOPanel(userData.editorState.ioPanel));
         } catch (error) {
           console.error("Error saving user data:", error);
         }
