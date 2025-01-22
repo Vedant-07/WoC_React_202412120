@@ -28,7 +28,7 @@ import {
   setUserFiles,
 } from "../../utils/fileSlice";
 import { db } from "../../utils/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { debounce } from "../../utils/debounce";
 
 const Ide = ({ handleSubmission, loading, setLoading }) => {
@@ -44,7 +44,7 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
   const ioPanel = useSelector((s) => s.ide.ioPanel);
 
   const languages = useSelector((state) => state.languages);
-  const monacoLanguage=useSelector(s=>s.ide.monacoLanguage)
+  const monacoLanguage = useSelector((s) => s.ide.monacoLanguage);
   const dispatch = useDispatch();
 
   const apiKey = import.meta.env.VITE_API_KEY;
@@ -77,8 +77,7 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
       localStorage.setItem("theme", JSON.stringify(theme));
       //localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
-
-      if( !selectedFileId) return
+      if (!selectedFileId) return;
       //TODO: apply hre updating related to firebase
       //create a query to update sourceCode
       const fileRef = doc(db, "files", selectedFileId);
@@ -105,20 +104,21 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
 
   useEffect(() => {
     //console.log("before triggered before ini....."+!languageId);
-    //TODO: problem here
+    //TODO: problem here improvement needed in this code.............
     //console.log("after triggered before ini....."+languageId);
-    if (!user ) {
-      //make function for this not the useeffect 
+    if (!user) {
+      //make function for this not the useeffect
       localStorage.setItem("languageId", JSON.stringify(languageId));
 
       const mLanguage = languages.find((lang) => lang.languageId == languageId);
-    if (mLanguage) dispatch(setMonacoLanguage(mLanguage.id));
-    localStorage.setItem("monacoLanguage",JSON.stringify(monacoLanguage))
+      if (mLanguage) dispatch(setMonacoLanguage(mLanguage.id));
+      localStorage.setItem("monacoLanguage", JSON.stringify(monacoLanguage));
       // const defaultLanguage = defaultLanguages(+languageId);
       // dispatch(setSourceCode(defaultLanguage));
       // localStorage.setItem("sourceCode", JSON.stringify(defaultLanguage));
       //setSourceCode(defaultLanguage)
     } else {
+      if (!selectedFileId) return;
       const fileRef = doc(db, "files", selectedFileId);
       // const updatedLanguageId=async()=>{
 
@@ -127,12 +127,16 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
       // }
       // const delayLanguageId=debounce(updatedLanguageId,500)
       // //delayLanguageId(languageId)
+      
+      
+      //this is temporary solution ,replace krvu padese in the delete one
       const newLanguageId = async () => {
         await updateDoc(fileRef, { languageId });
       };
 
-      newLanguageId();
-
+      const fileUpdateRef=newLanguageId();
+      
+      if(!fileUpdateRef) return
       dispatch(setLanguageId(languageId));
 
       //check for sourceCode if its empty then replace with default code else let it be there
@@ -171,8 +175,8 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
     if (mLanguage) dispatch(setMonacoLanguage(mLanguage.id));
-    localStorage.setItem("monacoLanguage",JSON.stringify(monacoLanguage))
-    dispatch(setSourceCode(defaultLanguages(+selectedId))); 
+    localStorage.setItem("monacoLanguage", JSON.stringify(monacoLanguage));
+    dispatch(setSourceCode(defaultLanguages(+selectedId)));
   };
 
   const handleStdIn = (val) => {
@@ -284,24 +288,22 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
         dragInterval={20}
         onDragEnd={handleDragEndIdeAndIOPanel}
       >
-        {monacoLanguage &&
-        
-        <div className="flex-grow h-full">
-          <Editor
-            language={monacoLanguage}
-            theme={theme}
-            value={sourceCode}
-            onChange={(value) => dispatch(setSourceCode(value))}
-            options={{
-              fontSize: 14,
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              wordWrap: "on",
-            }}
-          />
-        </div>
-        }
-        
+        {monacoLanguage && (
+          <div className="flex-grow h-full">
+            <Editor
+              language={monacoLanguage}
+              theme={theme}
+              value={sourceCode}
+              onChange={(value) => dispatch(setSourceCode(value))}
+              options={{
+                fontSize: 14,
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                wordWrap: "on",
+              }}
+            />
+          </div>
+        )}
 
         {showIO ? (
           <div className="flex h-full">

@@ -91,7 +91,7 @@ const FileExplorer = ({
     if (!user) return;
     const fileRef = doc(db, "files", fileId);
     const fileSnap = await getDoc(fileRef);
-
+    if(!fileSnap.data()) return
     const fileData = fileSnap.data();
     const serializableFileData = {
       ...fileData,
@@ -130,7 +130,41 @@ const FileExplorer = ({
 
   const handleDeleteButtonAction = async (fileId) => {
     const fileRef = doc(db, "files", fileId);
-    await deleteDoc(fileRef);
+    //when the currentFile is deleted ,set the position to first file
+    const userRef=doc(db,"users",user.uid)
+
+    const userSnap=await getDoc(userRef)
+    const lastActiveFile=userSnap.data().lastActiveFile
+
+    console.log("file to be deleted "+fileId+" XXXXXXXXXXXXXX  lastActivefile==>"+lastActiveFile)
+    if(lastActiveFile==fileId)
+    {
+      console.log("current file is going to get deleted");
+      const q = query(collection(db, "files"), where("isDefault", "==", true));
+      
+      const querySnapshot = await getDocs(q);
+      
+      const defaultFile = querySnapshot.docs[0]; // Get data from the first document
+
+      console.log("$")
+      console.log(defaultFile)
+      console.log("Replace with file ID: " + defaultFile);
+
+      await updateDoc(userRef,{
+        lastActiveFile:defaultFile.id
+      })
+
+
+      dispatch(setSelectedFileId(defaultFile.id))
+
+    }
+    
+      await deleteDoc(fileRef);  
+    
+      
+    
+
+
     dispatch(setIsFileExplorerChanged(true));
   };
 
