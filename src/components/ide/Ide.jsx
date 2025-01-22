@@ -118,44 +118,45 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
       // localStorage.setItem("sourceCode", JSON.stringify(defaultLanguage));
       //setSourceCode(defaultLanguage)
     } else {
-      if (!selectedFileId) return;
-      const fileRef = doc(db, "files", selectedFileId);
-      // const updatedLanguageId=async()=>{
+      //TODO: changes from  here it seems
+      // if (!selectedFileId) return;
+      // const fileRef = doc(db, "files", selectedFileId);
+      // // const updatedLanguageId=async()=>{
 
-      //   await updateDoc(fileRef,{languageId})
+      // //   await updateDoc(fileRef,{languageId})
 
+      // // }
+      // // const delayLanguageId=debounce(updatedLanguageId,500)
+      // // //delayLanguageId(languageId)
+      
+      
+      // //this is temporary solution ,replace krvu padese in the delete one
+      // const newLanguageId = async () => {
+      //   await updateDoc(fileRef, { languageId });
+      // };
+
+      // const fileUpdateRef=newLanguageId();
+      
+      // if(!fileUpdateRef) return
+      // dispatch(setLanguageId(languageId));
+
+      // //check for sourceCode if its empty then replace with default code else let it be there
+      // if (!sourceCode) {
+      //   const defaultSourceCode = defaultLanguages(+languageId);
+      //   dispatch(setSourceCode(defaultSourceCode));
+
+      //   const updatedSourceCode = async () => {
+      //     await updateDoc(fileRef, { sourceCode: defaultSourceCode });
+      //   };
+
+      //   updatedSourceCode();
+
+      //   dispatch(setUserFiles(null));
+      //   dispatch(setIsFileExplorerChanged(true));
+      // } else {
+      //   dispatch(setUserFiles(null));
+      //   dispatch(setIsFileExplorerChanged(true));
       // }
-      // const delayLanguageId=debounce(updatedLanguageId,500)
-      // //delayLanguageId(languageId)
-      
-      
-      //this is temporary solution ,replace krvu padese in the delete one
-      const newLanguageId = async () => {
-        await updateDoc(fileRef, { languageId });
-      };
-
-      const fileUpdateRef=newLanguageId();
-      
-      if(!fileUpdateRef) return
-      dispatch(setLanguageId(languageId));
-
-      //check for sourceCode if its empty then replace with default code else let it be there
-      if (!sourceCode) {
-        const defaultSourceCode = defaultLanguages(+languageId);
-        dispatch(setSourceCode(defaultSourceCode));
-
-        const updatedSourceCode = async () => {
-          await updateDoc(fileRef, { sourceCode: defaultSourceCode });
-        };
-
-        updatedSourceCode();
-
-        dispatch(setUserFiles(null));
-        dispatch(setIsFileExplorerChanged(true));
-      } else {
-        dispatch(setUserFiles(null));
-        dispatch(setIsFileExplorerChanged(true));
-      }
       //trigger re render of file explorer
     }
   }, [languageId]);
@@ -235,26 +236,29 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
             I/O
           </button>
           <div>
+            {!user &&
             <select
-              value={languageId}
-              onChange={handleOption}
-              style={{ backgroundColor: "white", color: "black" }}
-              disabled={languages.length === 0}
-            >
-              <option value="" disabled>
-                Select a language
-              </option>
-              {languages.length > 0 &&
-                languages.map((lang) => (
-                  <option
-                    key={lang.id}
-                    value={lang.languageId}
-                    className="text-black"
-                  >
-                    {lang.name}
-                  </option>
-                ))}
-            </select>
+            value={languageId}
+            onChange={handleOption}
+            style={{ backgroundColor: "white", color: "black" }}
+            disabled={languages.length === 0}
+          >
+            <option value="" disabled>
+              Select a language
+            </option>
+            {languages.length > 0 &&
+              languages.map((lang) => (
+                <option
+                  key={lang.id}
+                  value={lang.languageId}
+                  className="text-black"
+                >
+                  {lang.name}
+                </option>
+              ))}
+          </select>
+            }
+            
           </div>
         </div>
         <button

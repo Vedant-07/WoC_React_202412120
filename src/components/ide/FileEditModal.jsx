@@ -3,14 +3,16 @@ import React, { useState } from 'react'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { defaultLanguages } from '../../constants/defaultLanguages'
-import { setIsFileExplorerChanged} from '../../utils/fileSlice'
+import { setIsFileExplorerChanged, setUserFiles} from '../../utils/fileSlice'
 import { db } from '../../utils/firebase'
+import { setLanguageId, setMonacoLanguage, setSourceCode } from '../../utils/ideSlice'
 
 const FileEditModal = ({ setIsModalOpen}) => {
   const languages=useSelector(store=>store.languages)
   const user=useSelector(s=>s.user)
   const currentFile=useSelector(s=>s.file.currentFile)
   const selectedFileId=useSelector(s=>s.file.selectedFileId)
+  const languageId=useSelector(s=>s.ide.languageId)
   //const fileName=useSelector(store=>store.file.fileName)
   //const fileLanguageId=useSelector(store=>store.file.fileLanguageId)
   const [fileName,setFileName]=useState("")
@@ -49,8 +51,57 @@ const FileEditModal = ({ setIsModalOpen}) => {
       name:fileName,
       languageId:fileLanguageId
      })
+     
+     //dispatch(setIsFileExplorerChanged(true))
+
+
+
+     //if (!selectedFileId) return;  // commenting this i dont think it would execute
+     // const updatedLanguageId=async()=>{
+
+     //   await updateDoc(fileRef,{languageId})
+
+     // }
+     // const delayLanguageId=debounce(updatedLanguageId,500)
+     // //delayLanguageId(languageId)
+     
+     
+     //this is temporary solution ,replace krvu padese in the delete one
+    //  const newLanguageId = async () => { // doing the same jb here
+    //    await updateDoc(fileRef, { languageId });
+    //  };
+
+    //  const fileUpdateRef=newLanguageId();
+     
+     //if(!fileUpdateRef) return
+     //check this ,im updating the fileLanguageId here
+     dispatch(setLanguageId(fileLanguageId));
+
+     const mLanguage = languages.find((lang) => lang.languageId == fileLanguageId);
+    console.log(mLanguage.id);
+    dispatch(setMonacoLanguage(mLanguage.id))
+
+     //check for sourceCode if its empty then replace with default code else let it be there
+     //if (!sourceCode) { //removing this
+       const defaultSourceCode = defaultLanguages(+fileLanguageId);
+       dispatch(setSourceCode(defaultSourceCode));
+
+       const updatedSourceCode = async () => {
+         await updateDoc(fileRef, { sourceCode: defaultSourceCode });
+       };
+
+       updatedSourceCode();
+
+       dispatch(setUserFiles(null));
+       //dispatch(setIsFileExplorerChanged(true));
+     //}
+     //removing this else from here ,check this later
+    //  else {
+    //    dispatch(setUserFiles(null));
+       
+    //  }
+     dispatch(setIsFileExplorerChanged(true));
      setIsModalOpen(false)
-     dispatch(setIsFileExplorerChanged(true))
   }
 
   useEffect(()=>{

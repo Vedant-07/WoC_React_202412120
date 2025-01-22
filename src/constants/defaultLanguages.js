@@ -49,7 +49,7 @@ export const defaultLanguages = (id) => {
     case 68:
       return `echo "Hello World";`;
     case 80:
-      return `print("Hello World")`
+      return `print("Hello World")`;
     default:
       return ` will add default code for this language later | try other popular language to get default code to get started `;
   }

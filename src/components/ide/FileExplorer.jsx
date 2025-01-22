@@ -22,6 +22,7 @@ import {
 import { auth } from "../../utils/firebase";
 import FileEditModal from "./FileEditModal";
 import { db } from "../../utils/firebase";
+import { setMonacoLanguage } from "../../utils/ideSlice";
 
 const FileExplorer = ({
   handleSelectedFileId,
@@ -37,6 +38,7 @@ const FileExplorer = ({
   );
   const languages = useSelector((s) => s.languages);
   const openFileExplorer = useSelector((s) => s.file.openFileExplorer);
+  const languageId=useSelector(s=>s.ide.languageId)
 
   const dispatch = useDispatch();
 
@@ -99,12 +101,17 @@ const FileExplorer = ({
       updatedAt: fileData.updatedAt.toDate().toISOString(),
     };
 
+    //set the monacolanguage here // check this one out tooo
+    const mLanguage = languages.find((lang) => lang.languageId == fileData.languageId);
+    console.log("from the currentfile "+mLanguage.id);
+    dispatch(setMonacoLanguage(mLanguage.id))
+
     dispatch(setCurrentFile(serializableFileData));
   };
 
   useEffect(() => {
     //TODO: problem here .....
-    if (!selectedFileId && user) return; //check this later
+    if (!selectedFileId && !user) return; //check this later
     getCurrentFile(selectedFileId);
     //update the file here
     const updateLastActiveFile = async () => {
@@ -112,7 +119,9 @@ const FileExplorer = ({
         lastActiveFile: selectedFileId,
       });
     };
-
+    // const mLanguage = languages.find((lang) => lang.languageId == languageId);
+    // console.log(mLanguage.id);
+    // dispatch(setMonacoLanguage(mLanguage.id))
     updateLastActiveFile();
   }, [selectedFileId]);
 
@@ -153,6 +162,10 @@ const FileExplorer = ({
       await updateDoc(userRef,{
         lastActiveFile:defaultFile.id
       })
+
+    //   const mLanguage = languages.find((lang) => lang.languageId == defaultFile.data().file);
+    // console.log(mLanguage.id);
+    // dispatch(setMonacoLanguage(mLanguage.id))
 
 
       dispatch(setSelectedFileId(defaultFile.id))
