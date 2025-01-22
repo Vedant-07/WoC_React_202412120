@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 const Input = ({ handleStdIn }) => {
   const fileInputRef = useRef(null);
   const [fileContent, setFileContent] = useState("");
-  
 
   const handleFileClick = () => {
     fileInputRef.current.click();

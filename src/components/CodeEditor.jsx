@@ -65,7 +65,6 @@ const CodeEditor = () => {
     // updating the code editor state to the user doc
     const setEditorButtonLayout = async () => {
       const userRef = doc(db, "users", user.uid);
-
       await updateDoc(userRef, {
         "editorState.showIO": showIO,
         "editorState.openFileExplorer": openFileExplorer,
@@ -92,7 +91,7 @@ const CodeEditor = () => {
 
   const handleDragEnd = (sizes) => {
     dispatch(setExpAndIdePanel(sizes));
-    //add a ddebounce later
+    //add a ddebounce later to this
   };
 
   return (

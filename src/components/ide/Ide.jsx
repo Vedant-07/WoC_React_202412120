@@ -21,17 +21,12 @@ import {
   setMonacoLanguage,
 } from "../../utils/ideSlice";
 import { defaultLanguages } from "../../constants/defaultLanguages";
-import {
-  setIsFileExplorerChanged,
-  setOpenFileExplorer,
-  setSelectedFileId,
-  setUserFiles,
-} from "../../utils/fileSlice";
+import { setOpenFileExplorer } from "../../utils/fileSlice";
 import { db } from "../../utils/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { debounce } from "../../utils/debounce";
 
-const Ide = ({ handleSubmission, loading, setLoading }) => {
+const Ide = ({ handleSubmission, loading }) => {
   const user = useSelector((store) => store.user);
   const sourceCode = useSelector((store) => store.ide.sourceCode);
   const languageId = useSelector((store) => store.ide.languageId);
@@ -42,7 +37,6 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
   const showIO = useSelector((s) => s.ide.showIO);
   const ideAndIOPanel = useSelector((s) => s.ide.ideAndIOPanel);
   const ioPanel = useSelector((s) => s.ide.ioPanel);
-
   const languages = useSelector((state) => state.languages);
   const monacoLanguage = useSelector((s) => s.ide.monacoLanguage);
   const dispatch = useDispatch();
@@ -65,99 +59,44 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
         dispatch(addLanguages(languages));
         localStorage.setItem("languages", JSON.stringify(languages));
       };
-      console.log("here for the lang...");
       fetchLanguages();
     }
   }, []);
 
   useEffect(() => {
     if (!user) {
-      //console.log("first render 2????");
       localStorage.setItem("sourceCode", JSON.stringify(sourceCode));
       localStorage.setItem("theme", JSON.stringify(theme));
-      //localStorage.setItem("languageId",JSON.stringify(languageId))
     } else {
       if (!selectedFileId) return;
       //TODO: apply hre updating related to firebase
       //create a query to update sourceCode
       const fileRef = doc(db, "files", selectedFileId);
       const userRef = doc(db, "users", user.uid);
-
       const updatedSourceCode = async () => {
         await updateDoc(fileRef, { sourceCode });
       };
-
       const updatedTheme = async () => {
         const newTheme = {
           "settings.theme": theme,
         };
         await updateDoc(userRef, newTheme);
       };
-
       const delayCode = debounce(updatedSourceCode, 1000);
       const delayTheme = debounce(updatedTheme, 500);
-
       delayCode(sourceCode);
       delayTheme(theme);
     }
   }, [sourceCode, theme]);
 
   useEffect(() => {
-    //console.log("before triggered before ini....."+!languageId);
     //TODO: problem here improvement needed in this code.............
-    //console.log("after triggered before ini....."+languageId);
     if (!user) {
       //make function for this not the useeffect
       localStorage.setItem("languageId", JSON.stringify(languageId));
-
       const mLanguage = languages.find((lang) => lang.languageId == languageId);
       if (mLanguage) dispatch(setMonacoLanguage(mLanguage.id));
       localStorage.setItem("monacoLanguage", JSON.stringify(monacoLanguage));
-      // const defaultLanguage = defaultLanguages(+languageId);
-      // dispatch(setSourceCode(defaultLanguage));
-      // localStorage.setItem("sourceCode", JSON.stringify(defaultLanguage));
-      //setSourceCode(defaultLanguage)
-    } else {
-      //TODO: changes from  here it seems
-      // if (!selectedFileId) return;
-      // const fileRef = doc(db, "files", selectedFileId);
-      // // const updatedLanguageId=async()=>{
-
-      // //   await updateDoc(fileRef,{languageId})
-
-      // // }
-      // // const delayLanguageId=debounce(updatedLanguageId,500)
-      // // //delayLanguageId(languageId)
-      
-      
-      // //this is temporary solution ,replace krvu padese in the delete one
-      // const newLanguageId = async () => {
-      //   await updateDoc(fileRef, { languageId });
-      // };
-
-      // const fileUpdateRef=newLanguageId();
-      
-      // if(!fileUpdateRef) return
-      // dispatch(setLanguageId(languageId));
-
-      // //check for sourceCode if its empty then replace with default code else let it be there
-      // if (!sourceCode) {
-      //   const defaultSourceCode = defaultLanguages(+languageId);
-      //   dispatch(setSourceCode(defaultSourceCode));
-
-      //   const updatedSourceCode = async () => {
-      //     await updateDoc(fileRef, { sourceCode: defaultSourceCode });
-      //   };
-
-      //   updatedSourceCode();
-
-      //   dispatch(setUserFiles(null));
-      //   dispatch(setIsFileExplorerChanged(true));
-      // } else {
-      //   dispatch(setUserFiles(null));
-      //   dispatch(setIsFileExplorerChanged(true));
-      // }
-      //trigger re render of file explorer
     }
   }, [languageId]);
 
@@ -171,7 +110,6 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
 
   const handleOption = (e) => {
     const selectedId = e.target.value;
-    //setSelectedLanguageId(selectedId);
     dispatch(setLanguageId(selectedId));
     // Find the language object based on languageId
     const mLanguage = languages.find((lang) => lang.languageId == selectedId);
@@ -236,29 +174,28 @@ const Ide = ({ handleSubmission, loading, setLoading }) => {
             I/O
           </button>
           <div>
-            {!user &&
-            <select
-            value={languageId}
-            onChange={handleOption}
-            style={{ backgroundColor: "white", color: "black" }}
-            disabled={languages.length === 0}
-          >
-            <option value="" disabled>
-              Select a language
-            </option>
-            {languages.length > 0 &&
-              languages.map((lang) => (
-                <option
-                  key={lang.id}
-                  value={lang.languageId}
-                  className="text-black"
-                >
-                  {lang.name}
+            {!user && (
+              <select
+                value={languageId}
+                onChange={handleOption}
+                style={{ backgroundColor: "white", color: "black" }}
+                disabled={languages.length === 0}
+              >
+                <option value="" disabled>
+                  Select a language
                 </option>
-              ))}
-          </select>
-            }
-            
+                {languages.length > 0 &&
+                  languages.map((lang) => (
+                    <option
+                      key={lang.id}
+                      value={lang.languageId}
+                      className="text-black"
+                    >
+                      {lang.name}
+                    </option>
+                  ))}
+              </select>
+            )}
           </div>
         </div>
         <button

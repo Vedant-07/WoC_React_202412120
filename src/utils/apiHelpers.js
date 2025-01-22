@@ -1,12 +1,27 @@
 // utils/apiHelpers.js
 
 import axios from "axios";
-import { getSubmissionOptions, postSubmissionOptions } from "../constants/getApiOptions";
+import {
+  getSubmissionOptions,
+  postSubmissionOptions,
+} from "../constants/getApiOptions";
 
-export const postSubmission = async (apiUrl, apiKey, sourceCode, selectedLanguageId, stdIn) => {
+export const postSubmission = async (
+  apiUrl,
+  apiKey,
+  sourceCode,
+  selectedLanguageId,
+  stdIn
+) => {
   try {
     const res = await axios.request(
-      postSubmissionOptions(apiUrl, apiKey, sourceCode, selectedLanguageId, stdIn)
+      postSubmissionOptions(
+        apiUrl,
+        apiKey,
+        sourceCode,
+        selectedLanguageId,
+        stdIn
+      )
     );
     return res.data.token;
   } catch (error) {
@@ -22,12 +37,14 @@ export const getSubmissionResult = async (apiUrl, apiKey, token) => {
     const delay = 2000;
 
     while (attempt < maxAttempts) {
-      const res = await axios.request(getSubmissionOptions(apiUrl, apiKey, token));
+      const res = await axios.request(
+        getSubmissionOptions(apiUrl, apiKey, token)
+      );
       const status = res.data.status?.description;
       if (status === "Accepted" || status === "Wrong Answer") {
         return res.data;
-      } else if (status === "Processing" || status === "In Queue" ) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+      } else if (status === "Processing" || status === "In Queue") {
+        await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         return {
           stderr: null,

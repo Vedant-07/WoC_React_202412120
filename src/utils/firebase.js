@@ -1,14 +1,10 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import {getFirestore} from  'firebase/firestore';
-
+import { getFirestore } from "firebase/firestore";
 
 const provider = new GoogleAuthProvider();
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// TODO: refactor here
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "coderunner-ide.firebaseapp.com",
@@ -22,8 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-const db=getFirestore(app)
+const db = getFirestore(app);
 
-
-
-export { auth, provider, signInWithPopup,db };
+export { auth, provider, signInWithPopup, db };

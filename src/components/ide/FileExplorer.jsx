@@ -9,7 +9,7 @@ import {
   deleteDoc,
   updateDoc,
 } from "firebase/firestore";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setCurrentFile,
@@ -24,12 +24,7 @@ import FileEditModal from "./FileEditModal";
 import { db } from "../../utils/firebase";
 import { setMonacoLanguage } from "../../utils/ideSlice";
 
-const FileExplorer = ({
-  handleSelectedFileId,
-  isModalOpen,
-  setIsModalOpen,
-  handleUpdate,
-}) => {
+const FileExplorer = ({ isModalOpen, setIsModalOpen }) => {
   const user = useSelector((store) => store.user);
   const userFiles = useSelector((store) => store.file.userFiles);
   const selectedFileId = useSelector((store) => store.file.selectedFileId);
@@ -37,9 +32,8 @@ const FileExplorer = ({
     (s) => s.file.isFileExplorerChanged
   );
   const languages = useSelector((s) => s.languages);
-  const openFileExplorer = useSelector((s) => s.file.openFileExplorer);
-  const languageId=useSelector(s=>s.ide.languageId)
-
+  //const openFileExplorer = useSelector((s) => s.file.openFileExplorer);
+  //const languageId = useSelector((s) => s.ide.languageId);
   const dispatch = useDispatch();
 
   const findExtension = (id) => {
@@ -51,9 +45,6 @@ const FileExplorer = ({
       // Get the current authenticated user
       const currentUser = auth.currentUser;
       if (user) {
-        // Get the user ID
-
-        // Fetch files associated with the user ID
         const filesRef = collection(db, "files");
         const q = query(
           filesRef,
@@ -88,12 +79,12 @@ const FileExplorer = ({
     getUserFiles();
   }, [isFileExplorerChanged]);
 
-  //fetch the selectedFileId && filll up the current File
+  //fetch the selectedFileId && fill up the current File
   const getCurrentFile = async (fileId) => {
     if (!user) return;
     const fileRef = doc(db, "files", fileId);
     const fileSnap = await getDoc(fileRef);
-    if(!fileSnap.data()) return
+    if (!fileSnap.data()) return;
     const fileData = fileSnap.data();
     const serializableFileData = {
       ...fileData,
@@ -101,16 +92,16 @@ const FileExplorer = ({
       updatedAt: fileData.updatedAt.toDate().toISOString(),
     };
 
-    //set the monacolanguage here // check this one out tooo
-    const mLanguage = languages.find((lang) => lang.languageId == fileData.languageId);
-    console.log("from the currentfile "+mLanguage.id);
-    dispatch(setMonacoLanguage(mLanguage.id))
+    //set the monacoLanguage here // check this one out tooo
+    const mLanguage = languages.find(
+      (lang) => lang.languageId == fileData.languageId
+    );
+    dispatch(setMonacoLanguage(mLanguage.id));
 
     dispatch(setCurrentFile(serializableFileData));
   };
 
   useEffect(() => {
-    //TODO: problem here .....
     if (!selectedFileId && !user) return; //check this later
     getCurrentFile(selectedFileId);
     //update the file here
@@ -119,9 +110,7 @@ const FileExplorer = ({
         lastActiveFile: selectedFileId,
       });
     };
-    // const mLanguage = languages.find((lang) => lang.languageId == languageId);
-    // console.log(mLanguage.id);
-    // dispatch(setMonacoLanguage(mLanguage.id))
+
     updateLastActiveFile();
   }, [selectedFileId]);
 
@@ -132,7 +121,7 @@ const FileExplorer = ({
 
   const handleAddButtonAction = (e) => {
     //TODO:no change from this ------------ do something here
-    e.stopPropagation();
+    //e.stopPropagation();
     dispatch(setIsEditFile(false));
     setIsModalOpen(true);
   };
@@ -140,43 +129,21 @@ const FileExplorer = ({
   const handleDeleteButtonAction = async (fileId) => {
     const fileRef = doc(db, "files", fileId);
     //when the currentFile is deleted ,set the position to first file
-    const userRef=doc(db,"users",user.uid)
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    const lastActiveFile = userSnap.data().lastActiveFile;
 
-    const userSnap=await getDoc(userRef)
-    const lastActiveFile=userSnap.data().lastActiveFile
-
-    console.log("file to be deleted "+fileId+" XXXXXXXXXXXXXX  lastActivefile==>"+lastActiveFile)
-    if(lastActiveFile==fileId)
-    {
-      console.log("current file is going to get deleted");
+    if (lastActiveFile == fileId) {
       const q = query(collection(db, "files"), where("isDefault", "==", true));
-      
       const querySnapshot = await getDocs(q);
-      
       const defaultFile = querySnapshot.docs[0]; // Get data from the first document
-
-      console.log("$")
-      console.log(defaultFile)
-      console.log("Replace with file ID: " + defaultFile);
-
-      await updateDoc(userRef,{
-        lastActiveFile:defaultFile.id
-      })
-
-    //   const mLanguage = languages.find((lang) => lang.languageId == defaultFile.data().file);
-    // console.log(mLanguage.id);
-    // dispatch(setMonacoLanguage(mLanguage.id))
-
-
-      dispatch(setSelectedFileId(defaultFile.id))
-
+      await updateDoc(userRef, {
+        lastActiveFile: defaultFile.id,
+      });
+      dispatch(setSelectedFileId(defaultFile.id));
     }
-    
-      await deleteDoc(fileRef);  
-    
-      
-    
 
+    await deleteDoc(fileRef);
 
     dispatch(setIsFileExplorerChanged(true));
   };

@@ -29,7 +29,7 @@ const Body = () => {
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-
+  //TODO: a lot refactoring required here
   useEffect(() => {
     setLoading(true);
 
@@ -82,9 +82,7 @@ const Body = () => {
           const userSnapshot = await getDoc(userRef);
           if (!userSnapshot._document) {
             await setDoc(userRef, defaultUserData);
-
             const fileDocRef = await addDoc(filesRef, defaultFileData);
-
             // Update lastActiveFile in user data
             await setDoc(
               userRef,
@@ -92,7 +90,6 @@ const Body = () => {
               { merge: true }
             );
           }
-
           //get the lastActiveFile from userRef
           const userDataDoc = await getDoc(userRef);
           const userData = userDataDoc.data();
