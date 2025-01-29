@@ -8,6 +8,7 @@ import {
   orderBy,
   deleteDoc,
   updateDoc,
+  setDoc,
 } from "firebase/firestore";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -77,11 +78,12 @@ const FileExplorer = ({ isModalOpen, setIsModalOpen }) => {
 
   useEffect(() => {
     getUserFiles();
-  }, [isFileExplorerChanged]);
+  }, [isFileExplorerChanged,user]);
 
   //fetch the selectedFileId && fill up the current File
-  const getCurrentFile = async (fileId) => {
-    if (!user) return;
+  const getCurrentFile = async (fileId) => { //cahggne fileId name to selectedFileId
+    if (!user) return;//make changes here if requied
+   
     const fileRef = doc(db, "files", fileId);
     const fileSnap = await getDoc(fileRef);
     if (!fileSnap.data()) return;
@@ -102,17 +104,30 @@ const FileExplorer = ({ isModalOpen, setIsModalOpen }) => {
   };
 
   useEffect(() => {
-    if (!selectedFileId && !user) return; //check this later
-    getCurrentFile(selectedFileId);
-    //update the file here
-    const updateLastActiveFile = async () => {
-      await updateDoc(doc(db, "users", user.uid), {
-        lastActiveFile: selectedFileId,
-      });
+    if (!selectedFileId || !user) return;
+  
+    const updateAndFetchFile = async () => {
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+  
+        if (!userSnap.exists()) {
+         
+          //await setDoc(userRef, { lastActiveFile: selectedFileId }, { merge: true });
+          return
+        } else {
+          await setDoc(userRef, { lastActiveFile: selectedFileId }, { merge: true });
+        }
+  
+        await getCurrentFile(selectedFileId);
+      } catch (error) {
+        console.error("Error updating or fetching file:", error);
+      }
     };
-
-    updateLastActiveFile();
+  
+    updateAndFetchFile();
   }, [selectedFileId]);
+  
 
   const handleEditButtonAction = (e) => {
     dispatch(setIsEditFile(true));

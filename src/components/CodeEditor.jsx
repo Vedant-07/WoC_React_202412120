@@ -6,8 +6,9 @@ import FileExplorer from "./ide/FileExplorer";
 import { getSubmissionResult, postSubmission } from "../utils/apiHelpers";
 import { setOutput } from "../utils/ideSlice";
 import { setExpAndIdePanel, setOpenFileExplorer } from "../utils/fileSlice";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../utils/firebase";
+import ChatBot from "./chat/chatBot";
 
 //TODO: move this somewhere else
 const apiKey = import.meta.env.VITE_API_KEY;
@@ -65,29 +66,67 @@ const CodeEditor = () => {
     // updating the code editor state to the user doc
     const setEditorButtonLayout = async () => {
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        "editorState.showIO": showIO,
-        "editorState.openFileExplorer": openFileExplorer,
-      });
+      const userData=await getDoc(userRef)
+      if(userData.exists()){
+        await updateDoc(userRef, {
+          "editorState.showIO": showIO,
+          "editorState.openFileExplorer": openFileExplorer,
+        },{merge:true});
+      }
+      
     };
 
     if (user && openFileExplorer !== undefined && showIO !== undefined)
-      //TODO: add debounce to this .....
+      {
+        //TODO: add debounce to this .....
+       
       setEditorButtonLayout();
-  }, [openFileExplorer, showIO]);
+      }
+  }, [openFileExplorer, showIO,user]);
 
   //use the useCallback here
+  // const updateExpAndIdePanel = async () => {
+  //   const userRef = doc(db, "users", user.uid);
+  //   await updateDoc(userRef, {
+  //     "editorState.expAndIdePanel": expAndIdePanel,
+  //   });
+  // };
+
+  // useEffect(() => {
+  //   if (!user) return;
+  //   updateExpAndIdePanel();
+  // }, [expAndIdePanel]);
+
   const updateExpAndIdePanel = async () => {
-    const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
-      "editorState.expAndIdePanel": expAndIdePanel,
-    });
+    if (!user) return; // Ensure user is available
+  
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+       
+        return//no values so returning it
+      }
+  
+      await updateDoc(
+        userRef,
+        { "editorState.expAndIdePanel": expAndIdePanel },
+        { merge: true } // Creates if not exists, updates if exists
+      );
+  
+     
+    } catch (error) {
+      console.error("Error updating expAndIdePanel:", error);
+    }
   };
 
+  
   useEffect(() => {
-    if (!user) return;
+    if (!user || !expAndIdePanel) return; // Prevent unnecessary calls
     updateExpAndIdePanel();
-  }, [expAndIdePanel]);
+  }, [expAndIdePanel, user]); // Include `user` to ensure it's available
+  
 
   const handleDragEnd = (sizes) => {
     dispatch(setExpAndIdePanel(sizes));
@@ -105,6 +144,7 @@ const CodeEditor = () => {
           />
         </div>
       ) : (
+        <>
         <Split
           sizes={expAndIdePanel || [20, 80]}
           minSize={[150, 500]}
@@ -134,6 +174,8 @@ const CodeEditor = () => {
             />
           </div>
         </Split>
+        <ChatBot/>
+        </>
       )}
     </div>
   );

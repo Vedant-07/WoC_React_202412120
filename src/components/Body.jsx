@@ -12,6 +12,7 @@ import {
   getDoc,
   collection,
   addDoc,
+  updateDoc,
 } from "firebase/firestore";
 import {
   setExpAndIdePanel,
@@ -33,7 +34,7 @@ const Body = () => {
   useEffect(() => {
     setLoading(true);
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const login = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         const { uid, displayName, email, photoURL } = currentUser;
         dispatch(
@@ -55,12 +56,12 @@ const Body = () => {
               theme: "vs-dark",
             },
             editorState: {
-              cursorPosition: { line: 0, column: 0 },
-              scrollPosition: { top: 0, left: 0 },
+              //cursorPosition: { line: 0, column: 0 },
+              //scrollPosition: { top: 0, left: 0 },
               expAndIdePanel: [20, 80],
               ideAndIOPanel: [70, 30],
               ioPanel: [50, 50],
-              splitSizes: [60, 40],
+              //splitSizes: [60, 40],
               openFileExplorer: true,
               showIO: true,
             },
@@ -80,26 +81,61 @@ const Body = () => {
           const filesRef = collection(db, "files");
 
           const userSnapshot = await getDoc(userRef);
-          if (!userSnapshot._document) {
+
+          
+          //no docs in the user
+          if (!userSnapshot.exists()) {
             await setDoc(userRef, defaultUserData);
+
             const fileDocRef = await addDoc(filesRef, defaultFileData);
             // Update lastActiveFile in user data
-            await setDoc(
+           
+           
+            
+            await updateDoc(
               userRef,
               { lastActiveFile: fileDocRef.id },
               { merge: true }
             );
+
+            dispatch(setSelectedFileId(fileDocRef.id));
+            dispatch(setTheme(defaultUserData.settings.theme));
+            dispatch(
+              setOpenFileExplorer(defaultUserData.editorState.openFileExplorer)
+            );
+            dispatch(setShowIO(defaultUserData.editorState.showIO));
+            dispatch(
+              setExpAndIdePanel(defaultUserData.editorState.expAndIdePanel)
+            );
+            dispatch(
+              setIdeAndIOPanel(defaultUserData.editorState.ideAndIOPanel)
+            );
+            dispatch(setIOPanel(defaultUserData.editorState.ioPanel));
+          } else {
+            
+            const userDataDoc = await getDoc(userRef);
+            const userData = userDataDoc.data();
+           
+            dispatch(setSelectedFileId(userData.lastActiveFile));
+            dispatch(setTheme(userData.settings.theme));
+            dispatch(
+              setOpenFileExplorer(userData.editorState.openFileExplorer)
+            );
+            dispatch(setShowIO(userData.editorState.showIO));
+            dispatch(setExpAndIdePanel(userData.editorState.expAndIdePanel));
+            dispatch(setIdeAndIOPanel(userData.editorState.ideAndIOPanel));
+            dispatch(setIOPanel(userData.editorState.ioPanel));
           }
           //get the lastActiveFile from userRef
-          const userDataDoc = await getDoc(userRef);
-          const userData = userDataDoc.data();
-          dispatch(setSelectedFileId(userData.lastActiveFile));
-          dispatch(setTheme(userData.settings.theme));
-          dispatch(setOpenFileExplorer(userData.editorState.openFileExplorer));
-          dispatch(setShowIO(userData.editorState.showIO));
-          dispatch(setExpAndIdePanel(userData.editorState.expAndIdePanel));
-          dispatch(setIdeAndIOPanel(userData.editorState.ideAndIOPanel));
-          dispatch(setIOPanel(userData.editorState.ioPanel));
+          // const userDataDoc = await getDoc(userRef);
+          // const userData = userDataDoc.data();
+          // dispatch(setSelectedFileId(userData.lastActiveFile));
+          // dispatch(setTheme(userData.settings.theme));
+          // dispatch(setOpenFileExplorer(userData.editorState.openFileExplorer));
+          // dispatch(setShowIO(userData.editorState.showIO));
+          // dispatch(setExpAndIdePanel(userData.editorState.expAndIdePanel));
+          // dispatch(setIdeAndIOPanel(userData.editorState.ideAndIOPanel));
+          // dispatch(setIOPanel(userData.editorState.ioPanel));
         } catch (error) {
           console.error("Error saving user data:", error);
         }
@@ -109,7 +145,7 @@ const Body = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => login();
   }, [dispatch]);
 
   return (

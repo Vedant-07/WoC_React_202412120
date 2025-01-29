@@ -23,7 +23,7 @@ import {
 import { defaultLanguages } from "../../constants/defaultLanguages";
 import { setOpenFileExplorer } from "../../utils/fileSlice";
 import { db } from "../../utils/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { debounce } from "../../utils/debounce";
 
 const Ide = ({ handleSubmission, loading }) => {
@@ -73,18 +73,26 @@ const Ide = ({ handleSubmission, loading }) => {
       //create a query to update sourceCode
       const fileRef = doc(db, "files", selectedFileId);
       const userRef = doc(db, "users", user.uid);
+
+      //if(!userRef.exists()) return
+
       const updatedSourceCode = async () => {
-        await updateDoc(fileRef, { sourceCode });
+        const fileSnap = await getDoc(fileRef);
+
+      if(fileSnap.exists())
+        await setDoc(fileRef, { sourceCode },{merge:true});
       };
       const updatedTheme = async () => {
         const newTheme = {
           "settings.theme": theme,
         };
-        await updateDoc(userRef, newTheme);
+        await updateDoc(userRef, newTheme,{merge:true});
       };
       const delayCode = debounce(updatedSourceCode, 1000);
       const delayTheme = debounce(updatedTheme, 500);
+      
       delayCode(sourceCode);
+
       delayTheme(theme);
     }
   }, [sourceCode, theme]);
@@ -122,33 +130,78 @@ const Ide = ({ handleSubmission, loading }) => {
     dispatch(setStdIn(val));
   };
 
+  // const updateIdeAndIOPanel = async () => {
+  //   const userRef = doc(db, "users", user.uid);
+  //   await updateDoc(userRef, {
+  //     "editorState.ideAndIOPanel": ideAndIOPanel,
+  //   });
+  // };
   const updateIdeAndIOPanel = async () => {
-    const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
-      "editorState.ideAndIOPanel": ideAndIOPanel,
-    });
+    if (!user) return; // Ensure user is available
+  
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      //sus...
+      if (!userSnap.exists()) {
+        console.log("User document does not exist. Creating...");
+      }
+  
+      await updateDoc(
+        userRef,
+        { "editorState.ideAndIOPanel": ideAndIOPanel },
+        { merge: true } // Create if not exists, update if exists
+      );
+  
+     
+    } catch (error) {
+      console.error("Error updating ideAndIOPanel:", error);
+    }
   };
+  
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !ideAndIOPanel) return; // Prevent unnecessary calls
     updateIdeAndIOPanel();
-  }, [ideAndIOPanel]);
+  }, [ideAndIOPanel, user]); // Include `user` to ensure it's available
+  
 
   const handleDragEndIdeAndIOPanel = (sizes) => {
     dispatch(setIdeAndIOPanel(sizes));
   };
 
   const updateIOPanel = async () => {
-    const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
-      "editorState.ioPanel": ioPanel,
-    });
+    if(!user) return //TODO:remove this later
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+        console.log("User document does not exist. Creating...");
+      }
+  
+      await updateDoc(
+        userRef,
+        { "editorState.ioPanel": ioPanel },
+        { merge: true } // Creates if not exists, updates if exists
+      );
+  
+     
+    } catch (error) {
+      console.error("Error updating ioPanel:", error);
+    }
+
+    //const userRef = doc(db, "users", user.uid);
+    // await updateDoc(userRef, {
+    //   "editorState.ioPanel": ioPanel,
+    // });
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !ioPanel) return;
     updateIOPanel();
-  }, [ioPanel]);
+  }, [user,ioPanel]);
 
   const handleDragIOPanel = (sizes) => {
     dispatch(setIOPanel(sizes));
