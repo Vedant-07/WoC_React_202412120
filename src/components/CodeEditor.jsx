@@ -84,19 +84,6 @@ const CodeEditor = () => {
       }
   }, [openFileExplorer, showIO,user]);
 
-  //use the useCallback here
-  // const updateExpAndIdePanel = async () => {
-  //   const userRef = doc(db, "users", user.uid);
-  //   await updateDoc(userRef, {
-  //     "editorState.expAndIdePanel": expAndIdePanel,
-  //   });
-  // };
-
-  // useEffect(() => {
-  //   if (!user) return;
-  //   updateExpAndIdePanel();
-  // }, [expAndIdePanel]);
-
   const updateExpAndIdePanel = async () => {
     if (!user) return; // Ensure user is available
   

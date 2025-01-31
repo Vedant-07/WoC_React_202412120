@@ -126,16 +126,6 @@ const Body = () => {
             dispatch(setIdeAndIOPanel(userData.editorState.ideAndIOPanel));
             dispatch(setIOPanel(userData.editorState.ioPanel));
           }
-          //get the lastActiveFile from userRef
-          // const userDataDoc = await getDoc(userRef);
-          // const userData = userDataDoc.data();
-          // dispatch(setSelectedFileId(userData.lastActiveFile));
-          // dispatch(setTheme(userData.settings.theme));
-          // dispatch(setOpenFileExplorer(userData.editorState.openFileExplorer));
-          // dispatch(setShowIO(userData.editorState.showIO));
-          // dispatch(setExpAndIdePanel(userData.editorState.expAndIdePanel));
-          // dispatch(setIdeAndIOPanel(userData.editorState.ideAndIOPanel));
-          // dispatch(setIOPanel(userData.editorState.ioPanel));
         } catch (error) {
           console.error("Error saving user data:", error);
         }

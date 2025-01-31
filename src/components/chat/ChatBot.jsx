@@ -5,11 +5,11 @@ export const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatBotMessage, setChatBotMessage] = useState("");
   const [chatBotResponse, setChatBotResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSendMessage = async () => {
+    setLoading(true);
     if (!chatBotMessage.trim()) return;
-
-    console.log("Sending message:", chatBotMessage);
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${
       import.meta.env.VITE_GEMINI_API_KEY
@@ -38,16 +38,18 @@ export const Chatbot = () => {
       }
 
       const result = await response.json();
-      console.log("Response:", result);
 
       const generatedText =
         result.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
 
       setChatBotResponse(generatedText);
       setChatBotMessage("");
+      setLoading(false);
     } catch (error) {
       console.error("Error:", error);
       setChatBotResponse("Error getting response from AI.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,7 +78,9 @@ export const Chatbot = () => {
               </div>
 
               <div className="flex-1 overflow-auto p-2">
-                {chatBotResponse.length > 0 ? (
+                {loading ? (
+                  <p>Loading...........</p>
+                ) : chatBotResponse.length > 0 ? (
                   <p>{chatBotResponse}</p>
                 ) : (
                   <p className="text-gray-600 text-sm">How can I help you?</p>
@@ -90,12 +94,14 @@ export const Chatbot = () => {
                   className="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={chatBotMessage}
                   onChange={(e) => setChatBotMessage(e.target.value)}
+                  disabled={loading}
                 />
 
                 {/* Send Button (Fixed width, aligned right) */}
                 <button
                   className="ml-2 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all"
                   onClick={handleSendMessage}
+                  disabled={loading}
                 >
                   ▶️
                 </button>

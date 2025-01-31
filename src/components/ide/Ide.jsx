@@ -25,6 +25,7 @@ import { setOpenFileExplorer } from "../../utils/fileSlice";
 import { db } from "../../utils/firebase";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { debounce } from "../../utils/debounce";
+import { contentType } from "../../constants/contentType";
 
 const Ide = ({ handleSubmission, loading }) => {
   const user = useSelector((store) => store.user);
@@ -79,18 +80,18 @@ const Ide = ({ handleSubmission, loading }) => {
       const updatedSourceCode = async () => {
         const fileSnap = await getDoc(fileRef);
 
-      if(fileSnap.exists())
-        await setDoc(fileRef, { sourceCode },{merge:true});
+        if (fileSnap.exists())
+          await setDoc(fileRef, { sourceCode }, { merge: true });
       };
       const updatedTheme = async () => {
         const newTheme = {
           "settings.theme": theme,
         };
-        await updateDoc(userRef, newTheme,{merge:true});
+        await updateDoc(userRef, newTheme, { merge: true });
       };
       const delayCode = debounce(updatedSourceCode, 1000);
       const delayTheme = debounce(updatedTheme, 500);
-      
+
       delayCode(sourceCode);
 
       delayTheme(theme);
@@ -130,81 +131,87 @@ const Ide = ({ handleSubmission, loading }) => {
     dispatch(setStdIn(val));
   };
 
-  // const updateIdeAndIOPanel = async () => {
-  //   const userRef = doc(db, "users", user.uid);
-  //   await updateDoc(userRef, {
-  //     "editorState.ideAndIOPanel": ideAndIOPanel,
-  //   });
-  // };
   const updateIdeAndIOPanel = async () => {
     if (!user) return; // Ensure user is available
-  
+
     try {
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
-      //sus...
+      //TODO:remove this 
       if (!userSnap.exists()) {
-        console.log("User document does not exist. Creating...");
+        //console.log("User document does not exist. Creating...");
       }
-  
+
       await updateDoc(
         userRef,
         { "editorState.ideAndIOPanel": ideAndIOPanel },
         { merge: true } // Create if not exists, update if exists
       );
-  
-     
     } catch (error) {
       console.error("Error updating ideAndIOPanel:", error);
     }
   };
-  
 
   useEffect(() => {
     if (!user || !ideAndIOPanel) return; // Prevent unnecessary calls
     updateIdeAndIOPanel();
   }, [ideAndIOPanel, user]); // Include `user` to ensure it's available
-  
 
   const handleDragEndIdeAndIOPanel = (sizes) => {
     dispatch(setIdeAndIOPanel(sizes));
   };
 
   const updateIOPanel = async () => {
-    if(!user) return //TODO:remove this later
+    if (!user) return; //TODO:remove this later
     try {
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
-  
+
+      //TODO: remove this 
       if (!userSnap.exists()) {
-        console.log("User document does not exist. Creating...");
+        //console.log("User document does not exist. Creating...");
       }
-  
+
       await updateDoc(
         userRef,
         { "editorState.ioPanel": ioPanel },
         { merge: true } // Creates if not exists, updates if exists
       );
-  
-     
     } catch (error) {
       console.error("Error updating ioPanel:", error);
     }
-
-    //const userRef = doc(db, "users", user.uid);
-    // await updateDoc(userRef, {
-    //   "editorState.ioPanel": ioPanel,
-    // });
   };
 
   useEffect(() => {
     if (!user || !ioPanel) return;
     updateIOPanel();
-  }, [user,ioPanel]);
+  }, [user, ioPanel]);
 
   const handleDragIOPanel = (sizes) => {
     dispatch(setIOPanel(sizes));
+  };
+
+  //download the code here
+  const handleDownloadCode = () => {
+    const langContentType = contentType(+currentFile.languageId);
+    const lang = languages.find(
+      (language) => currentFile.languageId == language.languageId
+    );
+
+    const fileName = `${currentFile.name}${lang.extensions[0]}`;
+    const blob = new Blob([sourceCode], { type: langContentType });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -259,16 +266,25 @@ const Ide = ({ handleSubmission, loading }) => {
         >
           {loading ? "Processing the code plz wait ......" : "Run code"}
         </button>
-        <div>
-          <select
-            value={theme}
-            onChange={(e) => dispatch(setTheme(e.target.value))}
-            className="bg-slate-500"
-          >
-            <option value="vs-dark">Dark</option>
-            <option value="light">Light</option>
-            <option value="hc-black">High Contrast</option>
-          </select>
+
+        <div className="flex gap-3">
+          <div>
+            <select
+              value={theme}
+              onChange={(e) => dispatch(setTheme(e.target.value))}
+              className="bg-slate-500"
+            >
+              <option value="vs-dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="hc-black">High Contrast</option>
+            </select>
+          </div>
+          {user &&
+           <div title="download button">
+           <button onClick={handleDownloadCode}>🔽</button>
+         </div>
+           }
+          
         </div>
       </div>
 
