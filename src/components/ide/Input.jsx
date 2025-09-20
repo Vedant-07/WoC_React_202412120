@@ -31,18 +31,20 @@ const Input = ({ handleStdIn }) => {
   }, [fileContent, handleStdIn]);
 
   return (
-    <div className="flex flex-grow h-full flex-col">
-      <div className="flex justify-between items-center p-2">
-        <h4 className="text-2xl font-bold">Input</h4>
-        <div>
-          <button
-            className="bg-blue-500 text-white p-2  rounded shadow-md hover:bg-blue-600 transition"
-            onClick={handleFileClick}
-          >
-            Choose File{" "}
-          </button>{" "}
-          {/* TODO:add file name afterwards for display */}
+    <div className="flex flex-grow h-full flex-col bg-white">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-secondary-200 bg-secondary-50">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📝</span>
+          <h4 className="text-lg font-semibold text-secondary-900">Input</h4>
         </div>
+        <button
+          className="btn-primary text-sm px-4 py-2 flex items-center gap-2"
+          onClick={handleFileClick}
+        >
+          <span>📁</span>
+          <span>Choose File</span>
+        </button>
         <input
           type="file"
           ref={fileInputRef}
@@ -50,13 +52,18 @@ const Input = ({ handleStdIn }) => {
           style={{ display: "none" }}
         />
       </div>
-      <textarea
-        name=""
-        id=""
-        className="flex-grow bg-black p-2 text-white"
-        value={fileContent}
-        onChange={(e) => setFileContent(e.target.value)}
-      ></textarea>
+      
+      {/* Input Area */}
+      <div className="flex-grow p-4">
+        <textarea
+          name="input"
+          id="input"
+          className="w-full h-full bg-secondary-900 text-secondary-100 p-4 rounded-lg border border-secondary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm resize-none"
+          value={fileContent}
+          onChange={(e) => setFileContent(e.target.value)}
+          placeholder="Enter your input here or choose a file..."
+        />
+      </div>
     </div>
   );
 };

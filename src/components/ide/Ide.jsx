@@ -194,97 +194,170 @@ const Ide = ({ handleSubmission, loading }) => {
 
   //download the code here
   const handleDownloadCode = () => {
-    const langContentType = contentType(+currentFile.languageId);
-    const lang = languages.find(
-      (language) => currentFile.languageId == language.languageId
-    );
+    try {
+      console.log("Download attempt:", { currentFile, sourceCode, languages });
+      
+      if (!currentFile || !currentFile.languageId) {
+        console.log("No file selected or file data missing");
+        alert("No file selected or file data missing");
+        return;
+      }
 
-    const fileName = `${currentFile.name}${lang.extensions[0]}`;
-    const blob = new Blob([sourceCode], { type: langContentType });
-    const url = URL.createObjectURL(blob);
+      const langContentType = contentType(+currentFile.languageId);
+      const lang = languages.find(
+        (language) => currentFile.languageId == language.languageId
+      );
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
+      console.log("Language info:", { lang, langContentType });
 
-    // Cleanup
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      if (!lang || !lang.extensions || !lang.extensions[0]) {
+        console.log("Language extension not found");
+        alert("Language extension not found");
+        return;
+      }
+
+      const fileName = `${currentFile.name}${lang.extensions[0]}`;
+      console.log("Downloading file:", fileName);
+      
+      const blob = new Blob([sourceCode], { type: langContentType });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      console.log("Download completed successfully");
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("Error downloading file. Please try again.");
+    }
   };
 
   return (
-    <div className="h-full flex flex-col w-full">
-      <div className="flex justify-between px-4 py-2 items-center">
-        <div className="flex gap-3">
-          {!openFileExplorer && (
-            <button
-              className=""
-              onClick={() => dispatch(setOpenFileExplorer(true))}
-            >
-              {`⏩`}
-            </button>
-          )}
-
-          <button
-            className="bg-slate-400"
-            onClick={() => dispatch(setShowIO(!showIO))}
-          >
-            I/O
-          </button>
-          <div>
-            {!user && (
-              <select
-                value={languageId}
-                onChange={handleOption}
-                style={{ backgroundColor: "white", color: "black" }}
-                disabled={languages.length === 0}
+    <div className="h-full flex flex-col w-full bg-secondary-50">
+      {/* Modern Toolbar */}
+      <div className="bg-white border-b border-secondary-200 shadow-soft">
+        <div className="flex justify-between items-center px-4 py-3">
+          {/* Left Section - File Explorer & I/O Toggle */}
+          <div className="flex items-center gap-3">
+            {!openFileExplorer && (
+              <button
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-lg transition-all duration-200"
+                onClick={() => dispatch(setOpenFileExplorer(true))}
+                title="Show File Explorer"
               >
-                <option value="" disabled>
-                  Select a language
-                </option>
-                {languages.length > 0 &&
-                  languages.map((lang) => (
-                    <option
-                      key={lang.id}
-                      value={lang.languageId}
-                      className="text-black"
-                    >
-                      {lang.name}
-                    </option>
-                  ))}
-              </select>
+                <span>📁</span>
+                <span className="hidden sm:inline">Files</span>
+              </button>
+            )}
+
+            <button
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                showIO 
+                  ? "bg-primary-100 text-primary-700" 
+                  : "text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50"
+              }`}
+              onClick={() => dispatch(setShowIO(!showIO))}
+              title="Toggle Input/Output Panel"
+            >
+              <span>📊</span>
+              <span className="hidden sm:inline">I/O</span>
+            </button>
+
+            {/* Language Selector for Guest Users */}
+            {!user && (
+              <div className="relative">
+                <select
+                  value={languageId}
+                  onChange={handleOption}
+                  className="input-field text-sm py-2 pr-8 appearance-none cursor-pointer min-w-[140px]"
+                  disabled={languages.length === 0}
+                >
+                  <option value="" disabled>
+                    Select Language
+                  </option>
+                  {languages.length > 0 &&
+                    languages.map((lang) => (
+                      <option
+                        key={lang.id}
+                        value={lang.languageId}
+                        className="text-secondary-900"
+                      >
+                        {lang.name}
+                      </option>
+                    ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="w-4 h-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-        <button
-          className={`rounded-lg p-1 ${
-            loading ? "bg-gray-500 cursor-not-allowed" : "bg-green-500"
-          }`}
-          onClick={handleSubmission}
-        >
-          {loading ? "Processing the code plz wait ......" : "Run code"}
-        </button>
 
-        <div className="flex gap-3">
-          <div>
-            <select
-              value={theme}
-              onChange={(e) => dispatch(setTheme(e.target.value))}
-              className="bg-slate-500"
+          {/* Center Section - Run Button */}
+          <div className="flex items-center">
+            <button
+              className={`flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-soft ${
+                loading 
+                  ? "bg-secondary-400 cursor-not-allowed text-white" 
+                  : "bg-accent-600 hover:bg-accent-700 text-white hover:shadow-medium"
+              }`}
+              onClick={handleSubmission}
+              disabled={loading}
             >
-              <option value="vs-dark">Dark</option>
-              <option value="light">Light</option>
-              <option value="hc-black">High Contrast</option>
-            </select>
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Running...</span>
+                </>
+              ) : (
+                <>
+                  <span>▶️</span>
+                  <span>Run Code</span>
+                </>
+              )}
+            </button>
           </div>
-          {user &&
-           <div title="download button">
-           <button onClick={handleDownloadCode}>🔽</button>
-         </div>
-           }
-          
+
+          {/* Right Section - Theme & Download */}
+          <div className="flex items-center gap-3">
+            {/* Theme Selector */}
+            <div className="relative">
+              <select
+                value={theme}
+                onChange={(e) => dispatch(setTheme(e.target.value))}
+                className="input-field text-sm py-2 pr-8 appearance-none cursor-pointer min-w-[120px]"
+              >
+                <option value="vs-dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+                <option value="hc-black">⚫ High Contrast</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="w-4 h-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Download Button */}
+            {user && (
+              <button
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-lg transition-all duration-200"
+                onClick={handleDownloadCode}
+                title="Download Code"
+              >
+                <span>📥</span>
+                <span className="hidden sm:inline">Download</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

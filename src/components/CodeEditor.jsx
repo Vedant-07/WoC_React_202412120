@@ -121,9 +121,9 @@ const CodeEditor = () => {
   };
 
   return (
-    <div className="h-screen w-full">
+    <div className="h-[calc(100vh-4rem)] w-full">
       {!user ? (
-        <div className="h-full flex-grow bg-white">
+        <div className="h-full flex-grow">
           <Ide
             handleSubmission={handleSubmission}
             setLoading={setLoading}
@@ -132,36 +132,36 @@ const CodeEditor = () => {
         </div>
       ) : (
         <>
-        <Split
-          sizes={expAndIdePanel || [20, 80]}
-          minSize={[150, 500]}
-          gutterSize={9}
-          direction="horizontal"
-          cursor="col-resize"
-          className="split flex h-full"
-          dragInterval={20}
-          onDragEnd={handleDragEnd}
-        >
-          {openFileExplorer ? (
-            <div className="h-full bg-gray-100 overflow-auto">
-              <FileExplorer
-                isModalOpen={isModalOpen}
-                setIsModalOpen={setIsModalOpen}
+          <Split
+            sizes={expAndIdePanel || [20, 80]}
+            minSize={[150, 500]}
+            gutterSize={8}
+            direction="horizontal"
+            cursor="col-resize"
+            className="split flex h-full"
+            dragInterval={20}
+            onDragEnd={handleDragEnd}
+          >
+            {openFileExplorer ? (
+              <div className="h-full overflow-hidden">
+                <FileExplorer
+                  isModalOpen={isModalOpen}
+                  setIsModalOpen={setIsModalOpen}
+                />
+              </div>
+            ) : (
+              <div style={{ display: "none" }} />
+            )}
+
+            <div className="h-full flex-grow">
+              <Ide
+                handleSubmission={handleSubmission}
+                setLoading={setLoading}
+                loading={loading}
               />
             </div>
-          ) : (
-            <div style={{ display: "none" }} />
-          )}
-
-          <div className="h-full flex-grow bg-white">
-            <Ide
-              handleSubmission={handleSubmission}
-              setLoading={setLoading}
-              loading={loading}
-            />
-          </div>
-        </Split>
-        <ChatBot/>
+          </Split>
+          <ChatBot />
         </>
       )}
     </div>

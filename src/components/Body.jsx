@@ -139,18 +139,26 @@ const Body = () => {
   }, [dispatch]);
 
   return (
-    <>
-      <div className="flex m-0 p-0 flex-col h-screen">
-        <Navbar />
+    <div className="flex flex-col min-h-screen bg-secondary-50">
+      <Navbar />
+      <main className="flex-grow">
         {!loading ? (
           <Outlet />
         ) : (
-          <div className="font-semibold text-xl text-center">
-            loading please wait !!!
+          <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold text-secondary-900 mb-2">
+                Loading CodeRunner
+              </h2>
+              <p className="text-secondary-600">
+                Setting up your development environment...
+              </p>
+            </div>
           </div>
         )}
-      </div>
-    </>
+      </main>
+    </div>
   );
 };
 

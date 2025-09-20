@@ -98,7 +98,9 @@ const FileExplorer = ({ isModalOpen, setIsModalOpen }) => {
     const mLanguage = languages.find(
       (lang) => lang.languageId == fileData.languageId
     );
-    dispatch(setMonacoLanguage(mLanguage.id));
+    if (mLanguage) {
+      dispatch(setMonacoLanguage(mLanguage.id));
+    }
 
     dispatch(setCurrentFile(serializableFileData));
   };
@@ -142,82 +144,145 @@ const FileExplorer = ({ isModalOpen, setIsModalOpen }) => {
   };
 
   const handleDeleteButtonAction = async (fileId) => {
-    const fileRef = doc(db, "files", fileId);
-    //when the currentFile is deleted ,set the position to first file
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const lastActiveFile = userSnap.data().lastActiveFile;
+    try {
+      const fileRef = doc(db, "files", fileId);
+      //when the currentFile is deleted ,set the position to first file
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      const lastActiveFile = userSnap.data()?.lastActiveFile;
 
-    if (lastActiveFile == fileId) {
-      const q = query(collection(db, "files"), where("isDefault", "==", true));
-      const querySnapshot = await getDocs(q);
-      const defaultFile = querySnapshot.docs[0]; // Get data from the first document
-      await updateDoc(userRef, {
-        lastActiveFile: defaultFile.id,
-      });
-      dispatch(setSelectedFileId(defaultFile.id));
+      if (lastActiveFile == fileId) {
+        const q = query(collection(db, "files"), where("isDefault", "==", true));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.docs.length > 0) {
+          const defaultFile = querySnapshot.docs[0]; // Get data from the first document
+          await updateDoc(userRef, {
+            lastActiveFile: defaultFile.id,
+          });
+          dispatch(setSelectedFileId(defaultFile.id));
+        }
+      }
+
+      await deleteDoc(fileRef);
+      dispatch(setIsFileExplorerChanged(true));
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      alert("Error deleting file. Please try again.");
     }
-
-    await deleteDoc(fileRef);
-
-    dispatch(setIsFileExplorerChanged(true));
   };
 
   return (
-    <div>
+    <div className="h-full flex flex-col bg-white">
       {/* File Explorer Header */}
-      <div className="flex justify-between p-3 items-center bg-slate-400">
-        <h4>FileExplorer</h4>
+      <div className="flex justify-between items-center p-4 border-b border-secondary-200 bg-secondary-50">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📁</span>
+          <h4 className="text-lg font-semibold text-secondary-900">Files</h4>
+        </div>
         <div className="flex gap-2">
-          <button className="" onClick={handleAddButtonAction}>
-            {`➕`}
+          <button 
+            className="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-colors duration-200"
+            onClick={handleAddButtonAction}
+            title="Add New File"
+          >
+            <span className="text-lg">➕</span>
           </button>
           <button
-            className=""
+            className="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-colors duration-200"
             onClick={() => dispatch(setOpenFileExplorer(false))}
+            title="Close File Explorer"
           >
-            {`⏪`}
+            <span className="text-lg">⏪</span>
           </button>
         </div>
       </div>
 
-      <div>
-        {userFiles &&
-          userFiles.map((file) => {
-            return (
-              <div
-                className={`p-1 m-1 flex items-center justify-between ${
-                  file.fileId === selectedFileId
-                    ? "bg-slate-300"
-                    : "bg-slate-100"
-                } `}
-                id={file.fileId}
-                key={file.fileId}
-                onClick={() => dispatch(setSelectedFileId(file.fileId))}
-              >
-                <div className="flex items-center gap-1 flex-grow min-w-0">
-                  <div>{`📄`}</div>
-                  <div
-                    className={`truncate text-left max-w-full overflow-hidden `}
-                    title={file.name}
-                  >
-                    {file.name}
-                    {findExtension(file.languageId).extensions[0]}
+      {/* File List */}
+      <div className="flex-grow overflow-y-auto">
+        {userFiles && userFiles.length > 0 ? (
+          <div className="p-2">
+            {userFiles.map((file) => {
+              const isSelected = file.fileId === selectedFileId;
+              const extension = findExtension(file.languageId)?.extensions[0] || '';
+              
+              return (
+                <div
+                  className={`group flex items-center justify-between p-3 rounded-lg mb-1 transition-all duration-200 cursor-pointer ${
+                    isSelected
+                      ? "bg-primary-100 border border-primary-200 shadow-soft"
+                      : "hover:bg-secondary-50 border border-transparent"
+                  }`}
+                  id={file.fileId}
+                  key={file.fileId}
+                  onClick={() => dispatch(setSelectedFileId(file.fileId))}
+                >
+                  <div className="flex items-center gap-3 flex-grow min-w-0">
+                    <div className="text-lg">
+                      {file.isDefault ? "⭐" : "📄"}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium text-secondary-900 truncate">
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-secondary-500 font-mono">
+                          {extension}
+                        </span>
+                      </div>
+                      {file.isDefault && (
+                        <div className="text-xs text-primary-600 font-medium">
+                          Default
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      className="p-1.5 text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 rounded transition-colors duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditButtonAction(e);
+                      }}
+                      title="Edit File"
+                    >
+                      <span className="text-sm">⚙️</span>
+                    </button>
+                    {!file.isDefault && (
+                      <button
+                        className="p-1.5 text-danger-500 hover:text-danger-700 hover:bg-danger-50 rounded transition-colors duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteButtonAction(file.fileId);
+                        }}
+                        title="Delete File"
+                      >
+                        <span className="text-sm">🗑️</span>
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={(e) => handleEditButtonAction(e)}
-                  >{`⚙️`}</button>
-                  {!file.isDefault && (
-                    <button
-                      onClick={() => handleDeleteButtonAction(file.fileId)}
-                    >{`🗑️`}</button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6">
+            <div className="text-4xl mb-4">📁</div>
+            <h3 className="text-lg font-medium text-secondary-900 mb-2">
+              No Files Yet
+            </h3>
+            <p className="text-secondary-600 mb-4">
+              Create your first file to get started
+            </p>
+            <button
+              className="btn-primary text-sm px-4 py-2"
+              onClick={handleAddButtonAction}
+            >
+              <span className="mr-2">➕</span>
+              Create File
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

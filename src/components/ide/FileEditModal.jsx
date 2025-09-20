@@ -30,113 +30,138 @@ const FileEditModal = ({ setIsModalOpen }) => {
   const dispatch = useDispatch();
 
   const handleAddFile = async () => {
-    const filesRef = collection(db, "files");
-    const defaultCode = defaultLanguages(+fileLanguageId);
-    const defaultFileData = {
-      createdAt: Timestamp.fromDate(new Date()),
-      updatedAt: Timestamp.fromDate(new Date()),
-      isDefault: false,
-      languageId: fileLanguageId,
-      name: fileName,
-      sourceCode: defaultCode,
-      userId: user.uid,
-    };
-    await addDoc(filesRef, defaultFileData);
-    dispatch(setIsFileExplorerChanged(true));
-    setIsModalOpen(false);
+    try {
+      console.log("Adding file:", { fileName, fileLanguageId, user: user?.uid });
+      const filesRef = collection(db, "files");
+      const defaultCode = defaultLanguages(+fileLanguageId);
+      const defaultFileData = {
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
+        isDefault: false,
+        languageId: fileLanguageId,
+        name: fileName,
+        sourceCode: defaultCode,
+        userId: user.uid,
+      };
+      console.log("File data:", defaultFileData);
+      await addDoc(filesRef, defaultFileData);
+      console.log("File added successfully");
+      dispatch(setIsFileExplorerChanged(true));
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error adding file:", error);
+      alert("Error creating file. Please try again.");
+    }
   };
 
   const handleUpdateFile = async () => {
-    const fileRef = doc(db, "files", selectedFileId);
-    await updateDoc(fileRef, {
-      name: fileName,
-      languageId: fileLanguageId,
-    });
-    dispatch(setLanguageId(fileLanguageId));
-    const mLanguage = languages.find(
-      (lang) => lang.languageId == fileLanguageId
-    );
-    dispatch(setMonacoLanguage(mLanguage.id));
-    const defaultSourceCode = defaultLanguages(+fileLanguageId);
-    dispatch(setSourceCode(defaultSourceCode));
-    const updatedSourceCode = async () => {
-      await updateDoc(fileRef, { sourceCode: defaultSourceCode });
-    };
-    updatedSourceCode();
-    dispatch(setUserFiles(null));
-    dispatch(setIsFileExplorerChanged(true));
-    setIsModalOpen(false);
+    try {
+      const fileRef = doc(db, "files", selectedFileId);
+      await updateDoc(fileRef, {
+        name: fileName,
+        languageId: fileLanguageId,
+      });
+      dispatch(setLanguageId(fileLanguageId));
+      const mLanguage = languages.find(
+        (lang) => lang.languageId == fileLanguageId
+      );
+      if (mLanguage) {
+        dispatch(setMonacoLanguage(mLanguage.id));
+      }
+      const defaultSourceCode = defaultLanguages(+fileLanguageId);
+      dispatch(setSourceCode(defaultSourceCode));
+      const updatedSourceCode = async () => {
+        await updateDoc(fileRef, { sourceCode: defaultSourceCode });
+      };
+      updatedSourceCode();
+      dispatch(setUserFiles(null));
+      dispatch(setIsFileExplorerChanged(true));
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error updating file:", error);
+      alert("Error updating file. Please try again.");
+    }
   };
 
   useEffect(() => {
     if (!isEditFile) return;
-    setFileName(currentFile.name);
-    setFileLanguageId(currentFile.languageId);
-  }, [isEditFile]);
+    if (currentFile) {
+      setFileName(currentFile.name);
+      setFileLanguageId(currentFile.languageId);
+    }
+  }, [isEditFile, currentFile]);
 
   return (
-    <div>
-      <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50 ">
-        <div className="bg-slate-100 rounded p-5 w-96 shadow-lg mb-48">
-          <h2 className="text-xl font-bold mb-4">Add New File</h2>
-          <div className="mb-3">
-            <label className="block font-semibold mb-1">File Name</label>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="card p-6 w-full max-w-md animate-slide-up">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-2xl">📄</span>
+          <h2 className="text-xl font-bold text-secondary-900">
+            {isEditFile ? "Edit File" : "Add New File"}
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-secondary-700 mb-2">
+              File Name
+            </label>
             <input
               type="text"
-              className="w-full border rounded px-3 py-2"
+              className="input-field"
               placeholder="Enter file name"
               value={fileName || ""}
               onChange={(e) => setFileName(e.target.value)}
             />
           </div>
-          <div className="mb-4">
-            <label className="block font-semibold mb-1">File Type</label>
+          
+          <div>
+            <label className="block text-sm font-medium text-secondary-700 mb-2">
+              Programming Language
+            </label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="input-field"
               value={fileLanguageId}
               onChange={(e) => setFileLanguageId(e.target.value)}
             >
               <option value="" disabled>
-                Select file type
+                Select programming language
               </option>
-              {languages.map((lang) => {
-                return (
-                  <option key={lang.id} value={lang.languageId}>
-                    {lang.name}
-                  </option>
-                );
-              })}
+              {languages.map((lang) => (
+                <option key={lang.id} value={lang.languageId}>
+                  {lang.name}
+                </option>
+              ))}
             </select>
           </div>
-          <div className="flex justify-end gap-3">
+        </div>
+        
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            className="btn-secondary"
+            onClick={() => setIsModalOpen(false)}
+          >
+            Cancel
+          </button>
+          {!isEditFile ? (
             <button
-              className="px-4 py-2 bg-red-500 text-white rounded"
-              onClick={() => setIsModalOpen(false)}
+              className="btn-primary"
+              onClick={handleAddFile}
+              disabled={!fileName || !fileLanguageId}
             >
-              Cancel
+              <span className="mr-2">➕</span>
+              Add File
             </button>
-            {!isEditFile ? (
-              <>
-                <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded"
-                  onClick={handleAddFile}
-                  disabled={!fileName || !fileLanguageId}
-                >
-                  Add File
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded"
-                  onClick={handleUpdateFile}
-                  disabled={!fileName || !fileLanguageId}
-                >
-                  Update File
-                </button>
-              </>
-            )}
-          </div>
+          ) : (
+            <button
+              className="btn-primary"
+              onClick={handleUpdateFile}
+              disabled={!fileName || !fileLanguageId}
+            >
+              <span className="mr-2">💾</span>
+              Update File
+            </button>
+          )}
         </div>
       </div>
     </div>
